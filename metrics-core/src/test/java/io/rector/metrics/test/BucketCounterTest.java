@@ -1,8 +1,8 @@
 package io.rector.metrics.test;
 
 
-import io.rector.metrics.metrics.BucketCounter;
-import io.rector.metrics.metrics.Snapshot;
+import io.rector.metrics.BucketCounter;
+import io.rector.metrics.Snapshot;
  import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

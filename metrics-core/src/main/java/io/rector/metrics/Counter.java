@@ -1,9 +1,9 @@
-package io.rector.metrics.metrics;
+package io.rector.metrics;
 
 import java.util.concurrent.atomic.LongAdder;
 
-import static io.rector.metrics.metrics.MetricType.COUNTER;
-import static io.rector.metrics.metrics.Type.NUMBER;
+import static io.rector.metrics.MetricType.COUNTER;
+import static io.rector.metrics.Type.NUMBER;
 
 public class Counter implements Monitor<Number>
 {
@@ -63,5 +63,11 @@ public class Counter implements Monitor<Number>
     public void dec(long n)
     {
         count.add(-n);
+    }
+
+    @Override
+    public String toString()
+    {
+        return getMonitorType()+ " : " + getValue();
     }
 }

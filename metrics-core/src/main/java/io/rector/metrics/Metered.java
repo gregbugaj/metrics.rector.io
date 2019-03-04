@@ -1,4 +1,4 @@
-package io.rector.metrics.metrics;
+package io.rector.metrics;
 
 /**
  * An object which maintains mean and exponentially-weighted rate.

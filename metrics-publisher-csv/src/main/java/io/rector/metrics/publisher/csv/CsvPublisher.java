@@ -1,10 +1,9 @@
 package io.rector.metrics.publisher.csv;
 
-import io.rector.metrics.metrics.Message;
-import io.rector.metrics.metrics.MetricType;
-import io.rector.metrics.metrics.Publisher;
+import io.rector.metrics.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.omg.CORBA.TIMEOUT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,26 +31,36 @@ public class CsvPublisher implements Publisher
 
     private final Path path;
 
-    private List<Message> messages = new ArrayList<>();
+    private  MonitorRegistry registry;
+
+    private long time;
+
+    private TimeUnit unit;
 
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    public CsvPublisher(final Path path)
+    private CsvPublisher(final Path path)
     {
         this.path = Objects.requireNonNull(path);
-        executor.schedule(this::publisher,15, TimeUnit.SECONDS);
     }
 
-    public CsvPublisher()
+    private CsvPublisher()
     {
         this(Paths.get(DEFAULT_CSV_FILE));
     }
 
+    public CsvPublisher(final MonitorRegistry registry, final Path path, final long time, final TimeUnit unit)
+    {
+        this.registry = registry;
+        this.path = path;
+        this.time = time;
+        this.unit = unit;
+    }
+
     private void publisher()
     {
-        final List<Message> clone = new ArrayList<>(messages);
-        messages = new ArrayList<>();
-
+        final List<Message> messages = registry.getMessages();
+        System.out.println("Publishing messages : " + messages.size());
         try (
                 final BufferedWriter writer = Files.newBufferedWriter(path);
                 final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT
@@ -88,9 +98,44 @@ public class CsvPublisher implements Publisher
         }
     }
 
-    @Override
-    public void publish(final Message message)
+    public static Builder of(final MonitorRegistry registry, Path path)
     {
-        messages.add(message);
+        Objects.requireNonNull(registry);
+        return new Builder(registry, path);
+    }
+
+    public void start()
+    {
+        System.out.println("Starting CSV publisher");
+        executor.schedule(this::publisher,time, unit);
+    }
+
+    public static class Builder
+    {
+        private final MonitorRegistry registry;
+
+        private final Path path;
+
+        private long time;
+
+        private TimeUnit unit;
+
+        public Builder(final MonitorRegistry registry, final Path path)
+        {
+            this.registry = Objects.requireNonNull(registry);
+            this.path = Objects.requireNonNull(path);
+        }
+
+        public Builder interval(long time, TimeUnit unit)
+        {
+            this.time = time;
+            this.unit = unit;
+            return this;
+        }
+
+        public CsvPublisher build()
+        {
+            return new CsvPublisher(registry, path, time, unit);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package io.rector.metrics.metrics;
+package io.rector.metrics;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.rector.metrics.metrics.MonitorRegistry.Factory.getInstance;
+import static io.rector.metrics.MonitorRegistry.Factory.getInstance;
 
 public interface MonitorRegistry
 {
@@ -15,6 +15,12 @@ public interface MonitorRegistry
     {
         T newMetric();
     }
+
+    /**
+     * Get all metrics associated with this registry as {@link Message}
+     * @return collection of {@link Message}
+     */
+    List<Message> getMessages();
 
     /**
      * Register new Monitor
@@ -48,7 +54,8 @@ public interface MonitorRegistry
 
     /**
      * Create or retrieve counter, {@link Counter} will be created on first access
-     * @param name of the counter to create
+     *
+     * @param name of the counter to create and register
      * @return new instance of Counter or existing one if the gage already exist with given name
      */
     Counter counter(final String name);
@@ -100,14 +107,31 @@ public interface MonitorRegistry
     {
         private static final Logger LOGGER = LoggerFactory.getLogger(MonitorRegistryDefault.class);
 
-        private final Publisher publisher;
-
-        private  Map<String, Monitor<?>> metrics;
+        private ConcurrentHashMap<String, Monitor<?>> metrics;
 
         private MonitorRegistryDefault()
         {
-            publisher = Publisher.Factory.getInstance();
             metrics = new ConcurrentHashMap<>();
+        }
+
+        @Override
+        public List<Message> getMessages()
+        {
+            final Map<String, Monitor<?>> copy = Collections.unmodifiableMap(metrics);
+            final List<Message> messages = new ArrayList<>();
+
+            copy.forEach((key, value)->{
+                final Message msg = new Message();
+
+                msg.setName(key);
+                msg.setTime(System.currentTimeMillis());
+                msg.setMonitorType(value.getMonitorType());
+                msg.setValue(new Message.ValueObject(value.getType(), value.getValue()));
+
+                messages.add(msg);
+            });
+
+            return messages;
         }
 
         @Override
@@ -211,7 +235,7 @@ public interface MonitorRegistry
         }
 
         @Override
-        public Counter counter(String name)
+        public Counter counter(final String name)
         {
             return getOrAdd(name, MetricBuilder.COUTNERS);
         }
@@ -319,7 +343,7 @@ public interface MonitorRegistry
          * @param names the remaining elements of the name
          * @return {@code klass} and {@code names} concatenated by periods
          */
-        public static String name(Class<?> klass, String... names)
+        public static String name(final Class<?> klass, String... names)
         {
             return name(klass.getName(), names);
         }

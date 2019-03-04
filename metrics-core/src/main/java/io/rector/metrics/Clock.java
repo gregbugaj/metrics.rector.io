@@ -1,4 +1,4 @@
-package io.rector.metrics.metrics;
+package io.rector.metrics;
 
 
 /**

@@ -1,6 +1,6 @@
 package io.rector.metrics.test;
 
-import io.rector.metrics.metrics.Counter;
+import io.rector.metrics.Counter;
 import org.junit.jupiter.api.Test;
 
 

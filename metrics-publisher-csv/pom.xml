@@ -14,6 +14,11 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<junit.api.version>5.1.1</junit.api.version>
+		<junit.engine.version>5.1.1</junit.engine.version>
+		<junit.platform.version>1.1.1</junit.platform.version>
+		<junit.param.version>5.1.1</junit.param.version>
 	</properties>
 
 	<build>
@@ -51,8 +56,35 @@
 			<version>1.6</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.api.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.engine.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
+			<version>${junit.platform.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>${junit.param.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
-	
+
 </project>
 
 

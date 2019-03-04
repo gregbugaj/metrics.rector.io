@@ -1,7 +1,7 @@
 package io.rector.metrics.test;
 
-import io.rector.metrics.metrics.Message;
-import io.rector.metrics.metrics.Publisher;
+import io.rector.metrics.Message;
+import io.rector.metrics.Publisher;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,6 @@ public class MonitorConfigTest
     @Test
     public void duplicateGaugeRegistration() throws InterruptedException
     {
-        Publisher.Factory.set(new CountingPublisher());
 
 /*
         final Monitor<Number> gauge1 = new Gauge(MonitorConfig.builder("counter_1")
@@ -37,7 +36,6 @@ public class MonitorConfigTest
     //    @Test
     public void testNumberGaugeConfig() throws InterruptedException
     {
-        Publisher.Factory.set(new CountingPublisher());
 /*
         final Monitor<Number> gauge1 = new Gauge(MonitorConfig.builder("counter_1")
             .interval(1, TimeUnit.SECONDS).build())
@@ -60,10 +58,9 @@ public class MonitorConfigTest
     {
         private static final Logger logger = LoggerFactory.getLogger(CountingPublisher.class);
 
-        @Override
-        public void publish(final Message message)
+        @Override public void start()
         {
-            logger.info("Message : {}", message);
+
         }
     }
 }

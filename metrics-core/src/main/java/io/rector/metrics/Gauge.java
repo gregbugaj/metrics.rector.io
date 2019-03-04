@@ -1,4 +1,4 @@
-package io.rector.metrics.metrics;
+package io.rector.metrics;
 
 /**
  * A gauge metric is an instantaneous reading of value in time.

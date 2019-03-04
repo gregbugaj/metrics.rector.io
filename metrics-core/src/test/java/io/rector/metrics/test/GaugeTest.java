@@ -1,6 +1,6 @@
 package io.rector.metrics.test;
 
-import io.rector.metrics.metrics.Gauge;
+import io.rector.metrics.Gauge;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
