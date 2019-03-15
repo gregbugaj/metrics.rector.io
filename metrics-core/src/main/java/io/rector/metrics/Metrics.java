@@ -7,9 +7,9 @@ public class Metrics
         return new Counter();
     }
 
-    public static Gauge<?> newGauge()
+    public static Gauge newGauge()
     {
-        throw new RuntimeException("Not yet implemented");
+        return new Gauge();
     }
 
     public static Monitor<?>  newTimer()

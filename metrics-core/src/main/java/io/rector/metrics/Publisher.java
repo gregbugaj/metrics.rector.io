@@ -9,4 +9,5 @@ public interface Publisher
      * Start streaming results to the publisher
      */
     void start();
+    
 }

@@ -19,38 +19,38 @@ public class CounterTest
 
     @Test
     public void incrementsByOne() throws Exception {
-        counter.inc();
+        counter.increment();
         assertThat(counter.getValue(), is(1L));
     }
 
     @Test
     public void incrementsByAnArbitraryDelta() throws Exception
     {
-        counter.inc(12);
+        counter.increment(12);
         assertThat(counter.getValue(), is(12L));
     }
 
     @Test
     public void decrementsByOne() throws Exception {
-        counter.dec();
+        counter.decrement();
         assertThat(counter.getValue(), is(-1L));
     }
 
     @Test
     public void decrementsByAnArbitraryDelta() throws Exception {
-        counter.dec(12);
+        counter.decrement(12);
         assertThat(counter.getValue(), is(-12L));
     }
 
     @Test
     public void incrementByNegativeDelta() throws Exception {
-        counter.inc(-12);
+        counter.increment(-12);
         assertThat(counter.getValue(), is(-12L));
     }
 
     @Test
     public void decrementByNegativeDelta() throws Exception {
-        counter.dec(-12);
+        counter.decrement(-12);
         assertThat(counter.getValue(), is(12L));
     }
 }

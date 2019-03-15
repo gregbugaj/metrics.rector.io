@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.LongAdder;
  * @see EWMA
  * codahale
  */
-public class Meter implements Metered, Monitor<Long>
+public class Meter implements Metered, Monitor<Long>, Resettable
 {
     private static final long TICK_INTERVAL = TimeUnit.SECONDS.toNanos(5);
 
@@ -146,5 +146,13 @@ public class Meter implements Metered, Monitor<Long>
     public long getCount()
     {
         return getValue();
+    }
+
+    @Override
+    public void reset() {
+        synchronized (this)
+        {
+            m1Rate.reset();
+        }
     }
 }

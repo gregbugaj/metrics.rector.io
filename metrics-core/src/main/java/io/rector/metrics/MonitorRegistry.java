@@ -17,10 +17,11 @@ public interface MonitorRegistry
     }
 
     /**
-     * Get all metrics associated with this registry as {@link Message}
-     * @return collection of {@link Message}
+     * Get underlying metrics
+     *
+     * @return
      */
-    List<Message> getMessages();
+    Map<String, Monitor<?>> getMetrics();
 
     /**
      * Register new Monitor
@@ -48,9 +49,9 @@ public interface MonitorRegistry
      * @param name of the gage to get
      * @return new instance of Gauge or existing one if the gage already exist with given name
      */
-    Gauge<?> gauge(final String name);
+    Gauge gauge(final String name);
 
-    Gauge<?> gauge(final String name, MetricSupplier<Gauge> supplier);
+    Gauge gauge(final String name, final MetricSupplier<Gauge> supplier);
 
     /**
      * Create or retrieve counter, {@link Counter} will be created on first access
@@ -60,7 +61,7 @@ public interface MonitorRegistry
      */
     Counter counter(final String name);
 
-    Counter counter(final String name, MetricSupplier<Counter> supplier);
+    Counter counter(final String name, final MetricSupplier<Counter> supplier);
 
     /**
      * Remove metric with given name
@@ -75,6 +76,11 @@ public interface MonitorRegistry
         return get("DEFAULT");
     }
 
+    /**
+     * Get {@link MonitorRegistry} associated with this name
+     * @param name the name of the registry to get
+     * @return
+     */
     static MonitorRegistry get(String name)
     {
         return getInstance(name);
@@ -105,7 +111,7 @@ public interface MonitorRegistry
 
     class MonitorRegistryDefault implements MonitorRegistry
     {
-        private static final Logger LOGGER = LoggerFactory.getLogger(MonitorRegistryDefault.class);
+        private static final Logger log = LoggerFactory.getLogger(MonitorRegistryDefault.class);
 
         private ConcurrentHashMap<String, Monitor<?>> metrics;
 
@@ -114,24 +120,9 @@ public interface MonitorRegistry
             metrics = new ConcurrentHashMap<>();
         }
 
-        @Override
-        public List<Message> getMessages()
+        public Map<String, Monitor<?>> getMetrics()
         {
-            final Map<String, Monitor<?>> copy = Collections.unmodifiableMap(metrics);
-            final List<Message> messages = new ArrayList<>();
-
-            copy.forEach((key, value)->{
-                final Message msg = new Message();
-
-                msg.setName(key);
-                msg.setTime(System.currentTimeMillis());
-                msg.setMonitorType(value.getMonitorType());
-                msg.setValue(new Message.ValueObject(value.getType(), value.getValue()));
-
-                messages.add(msg);
-            });
-
-            return messages;
+            return Collections.unmodifiableMap(metrics);
         }
 
         @Override
@@ -165,7 +156,7 @@ public interface MonitorRegistry
             }
             catch(IllegalArgumentException ex)
             {
-                LOGGER.error("Unable to register metric: " + name, ex);
+                log.error("Unable to register metric: " + name, ex);
             }
 
             return null;
@@ -210,13 +201,13 @@ public interface MonitorRegistry
         }
 
         @Override
-        public Gauge<?> gauge(String name)
+        public Gauge gauge(String name)
         {
           return getOrAdd(name, MetricBuilder.GAUGES);
         }
 
         @Override
-        public Gauge<?> gauge(String name, MetricSupplier<Gauge> supplier)
+        public Gauge gauge(String name, MetricSupplier<Gauge> supplier)
         {
          return getOrAdd(name, new MetricBuilder<Gauge>() {
 
@@ -262,7 +253,8 @@ public interface MonitorRegistry
         @SuppressWarnings("unchecked")
         private <T extends Monitor> T getOrAdd(final String name, final MetricBuilder<T> builder)
         {
-            Monitor<?> metric = metrics.get(name);
+            final Monitor<?> metric = metrics.get(name);
+
             if(builder.isInstance(metric))
             {
                 return (T) metric;
@@ -385,7 +377,7 @@ public interface MonitorRegistry
             @Override
             public Gauge newMetric()
             {
-                return null;
+                return new Gauge();
             }
 
             @Override

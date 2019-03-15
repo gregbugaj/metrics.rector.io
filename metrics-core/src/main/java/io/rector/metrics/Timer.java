@@ -89,7 +89,6 @@ public class Timer implements Monitor<Long>
     }
 
 
-
     @Override
     public Long getValue()
     {

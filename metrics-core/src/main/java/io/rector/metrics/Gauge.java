@@ -1,22 +1,40 @@
 package io.rector.metrics;
 
+
 /**
  * A gauge metric is an instantaneous reading of value in time.
- * @param <T> Type of the gauge
  *
- * @see
  */
-public interface Gauge<T> extends Monitor<T>
+public class Gauge implements Monitor<Long>
 {
+    private long value;
+
+    public void setValue(final long value)
+    {
+        this.value = value;
+    }
+
     @Override
-    default  Type getType()
+    public Long getValue()
+    {
+        return value;
+    }
+
+    @Override
+    public Type getType()
     {
         return Type.NUMBER;
     }
 
     @Override
-    default MetricType getMonitorType()
+    public MetricType getMonitorType()
     {
         return MetricType.GAUGE;
+    }
+
+    @Override
+    public String toString()
+    {
+        return getMonitorType()+ " : " + getValue();
     }
 }

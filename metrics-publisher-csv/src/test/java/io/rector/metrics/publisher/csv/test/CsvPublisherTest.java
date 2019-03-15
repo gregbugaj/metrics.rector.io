@@ -1,6 +1,7 @@
 package io.rector.metrics.publisher.csv.test;
 
 import io.rector.metrics.Counter;
+import io.rector.metrics.Gauge;
 import io.rector.metrics.MonitorRegistry;
 import io.rector.metrics.publisher.csv.CsvPublisher;
 import org.junit.jupiter.api.Test;
@@ -12,24 +13,48 @@ public class CsvPublisherTest
 {
 
     @Test
-    public void test001() throws InterruptedException
+    public void counterTest001() throws InterruptedException
     {
         final MonitorRegistry registry = MonitorRegistry.get("test-001");
+
         final CsvPublisher publisher = CsvPublisher
                     .of(registry, Paths.get("./report.csv"))
-                    .interval(1l, TimeUnit.SECONDS)
+                    .withInterval(2l, TimeUnit.SECONDS)
+                    .withResetOnReporting(false)
                     .build();
 
         publisher.start();
 
-        final Counter c1 = registry.counter("sample.counter.a");
-        System.out.println(c1);
-        c1.inc();
+        final Counter c1 = registry.counter("sample.counter.requests");
 
-        System.out.println(c1);
+        while(true)
+        {
+            c1.increment();
+            System.out.println(c1);
+            Thread.sleep(500);
+        }
+    }
 
+    @Test
+    public void gaugeTest001() throws InterruptedException
+    {
+        final MonitorRegistry registry = MonitorRegistry.get("test-001");
 
+        final CsvPublisher publisher = CsvPublisher
+                .of(registry, Paths.get("./report.csv"))
+                .withInterval(2l, TimeUnit.SECONDS)
+                .withResetOnReporting(false)
+                .build();
 
-        Thread.sleep(5000);
+        publisher.start();
+
+        Gauge gauge = registry.gauge("sample.gauge.memory");
+
+        while(true)
+        {
+            System.out.println(gauge);
+            gauge.setValue(System.currentTimeMillis());
+            Thread.sleep(500);
+        }
     }
 }

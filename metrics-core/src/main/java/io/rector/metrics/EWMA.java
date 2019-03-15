@@ -97,6 +97,7 @@ public class EWMA
     {
         final long count = uncounted.sumThenReset();
         final double instantRate = count / interval;
+
         if (initialized)
         {
             final double oldRate = this.rate;
@@ -117,5 +118,11 @@ public class EWMA
      */
     public double getRate(final TimeUnit rateUnit) {
         return rate * (double) rateUnit.toNanos(1);
+    }
+
+    public void reset()
+    {
+        rate = 0;
+        initialized = false;
     }
 }

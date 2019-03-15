@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.LongAdder;
 import static io.rector.metrics.MetricType.COUNTER;
 import static io.rector.metrics.Type.NUMBER;
 
-public class Counter implements Monitor<Number>
+public class Counter implements Monitor<Number>, Resettable
 {
     private final LongAdder count;
 
@@ -35,34 +35,40 @@ public class Counter implements Monitor<Number>
     /**
      * Increment counter value by one
      */
-    public void inc()
+    public void increment()
     {
-        inc(1);
+        increment(1);
     }
 
     /**
      * Increment count by {@code n}
      * @param n  the amount by which the counter will be incremented
      */
-    public void inc(long n) {
+    public void increment(long n) {
         count.add(n);
     }
 
     /**
      * Decrement value by 1
      */
-    public void dec()
+    public void decrement()
     {
-        dec(1);
+        decrement(1);
     }
 
     /**
      * Decrement value by {@code n}
      * @param n the amount by which the counter will be decremented
      */
-    public void dec(long n)
+    public void decrement(long n)
     {
         count.add(-n);
+    }
+
+    @Override
+    public void reset()
+    {
+        count.reset();
     }
 
     @Override

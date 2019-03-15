@@ -16,18 +16,21 @@ public class GaugeTest
     @Test
     public void supplierTest() throws Exception
     {
-        Gauge<Number> gauge =  ()-> 10;
-        assertThat(gauge.getValue(),is(10));
+        Gauge gauge =  new Gauge();
+        gauge.setValue(10L);
 
-        gauge = ()-> 5;
-        assertThat(gauge.getValue(),is(5));
+        assertThat(gauge.getValue(), is(10));
+
+        gauge.setValue(5);
+        assertThat(gauge.getValue(), is(5));
     }
 
     @Test
     public void gageValue() throws Exception
     {
         List<Integer> items = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        Gauge<Integer> gauge =  ()-> items.size();
+        Gauge gauge = new Gauge();
+        gauge.setValue(items.size());
 
         assertThat(gauge.getValue(),is(10));
     }
