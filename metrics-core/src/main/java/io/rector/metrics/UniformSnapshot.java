@@ -195,7 +195,8 @@ public class UniformSnapshot extends Snapshot
     {
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(output, UTF_8)))
         {
-            for (long value : values) {
+            for (long value : values)
+            {
                 out.printf("%d%n", value);
             }
         }

@@ -46,7 +46,7 @@ public class CsvPublisher extends BasePublisher
         this(Paths.get(DEFAULT_CSV_FILE));
     }
 
-    public CsvPublisher(MonitorRegistry registry, Path path, long time, TimeUnit unit, boolean resetOnReporting) 
+    public CsvPublisher(final MonitorRegistry registry, Path path, long time, TimeUnit unit, boolean resetOnReporting)
     {
         this.registry = registry;
         this.path = path;
@@ -108,7 +108,6 @@ public class CsvPublisher extends BasePublisher
 
     public void start()
     {
-        System.out.println("Starting CSV publisher");
         executor.scheduleAtFixedRate(this::publisher,time, time, unit);
     }
 
