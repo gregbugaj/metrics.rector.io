@@ -201,4 +201,9 @@ public class UniformSnapshot extends Snapshot
             }
         }
     }
+
+    @Override public String toString()
+    {
+        return Arrays.toString(values);
+    }
 }

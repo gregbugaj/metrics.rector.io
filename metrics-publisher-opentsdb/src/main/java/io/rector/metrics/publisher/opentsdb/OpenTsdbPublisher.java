@@ -30,12 +30,11 @@ public class OpenTsdbPublisher implements Publisher
     }
 
 
-    @Override public void start()
+    @Override
+    public void start()
     {
 
     }
-
-
 
     /**
      * Add new metric

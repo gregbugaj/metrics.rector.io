@@ -86,7 +86,7 @@ public class CsvPublisher extends BasePublisher
                         }
                     }
                 }
-                catch (IOException ex)
+                catch (final IOException ex)
                 {
                     log.error("Unable to create metric : " + name, ex);
                 }
