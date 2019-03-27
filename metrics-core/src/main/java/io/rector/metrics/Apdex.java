@@ -1,5 +1,12 @@
 package io.rector.metrics;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 /**
  * Application Performance Index Monitor
  *
@@ -17,33 +24,70 @@ package io.rector.metrics;
  * </ul>
  *
  */
-public class Apdex implements Monitor<Number>, AutoCloseable
+public class Apdex implements AutoCloseable
 {
-    public Apdex()
-    {
+    private static final Logger log = LoggerFactory.getLogger(Apdex.class);
 
+    private Clock clock;
+
+    private ApdexProvider provider;
+
+    public Apdex(int size)
+    {
+        this(size, Clock.defaultClock());
     }
 
-    @Override
-    public Number getValue()
+    public Apdex(int size, final Clock clock)
+    {
+        Objects.requireNonNull(clock);
+        if (size < 0)
+            throw new IllegalArgumentException("Size needs to be greater than 0 got " + size);
+
+        Reservoir reservoir;
+
+        if (size == 0)
+            reservoir = new UniformReservoir();
+        else
+            reservoir = new SlidingWindowReservoir(size);
+
+        final long seconds  = 5;
+        this.clock = clock;
+        this.provider = new ApdexProvider(reservoir, seconds);
+    }
+
+    public static Apdex track(final String tag)
     {
         return null;
     }
 
-    @Override
-    public Type getType()
+    public <T> T track(final Supplier<T> action)
     {
-        return null;
+        Objects.requireNonNull(action);
+        final long s = clock.getTick();
+        try
+        {
+            return action.get();
+        }
+        finally
+        {
+            track(clock.getTick() - s);
+        }
+    }
+
+    public void track(final long duration)
+    {
+        if(duration < 0)
+            return ;
+
+        provider.update(duration);
+
+        if(log.isDebugEnabled())
+            log.debug("apdex track ::{} ms | {} s", duration, TimeUnit.NANOSECONDS.toSeconds(duration));
     }
 
     @Override
-    public MetricType getMonitorType() {
-        return null;
-    }
-
-    @Override
-    public void close() throws Exception
+    public void close()
     {
-        // NoOp
+
     }
 }

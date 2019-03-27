@@ -41,7 +41,8 @@ public abstract class Clock
     public static class UserTimeClock extends Clock
     {
         @Override
-        public long getTick() {
+        public long getTick()
+        {
             return System.nanoTime();
         }
     }

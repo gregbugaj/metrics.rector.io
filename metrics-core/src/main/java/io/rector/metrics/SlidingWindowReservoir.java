@@ -16,9 +16,7 @@ public class SlidingWindowReservoir implements Reservoir
     {
         this.values = new long[size];
         for (int i = 0; i < values.length; i++)
-        {
             values[i] = 0;
-        }
 
         count = 0;
     }
@@ -40,15 +38,14 @@ public class SlidingWindowReservoir implements Reservoir
     @Override
     public Snapshot getSnapshot()
     {
-        final int s = size();
-        if(s == 0)
+        final int size = size();
+        if(size == 0)
             return new UniformSnapshot(new long[0]);
 
-        final List<Long> copy = new ArrayList<>(s);
-        for (int i = 0; i < s; i++)
-        {
+        final ArrayList<Long> copy = new ArrayList<>(size);
+        for (int i = 0; i < size; i++)
             copy.add(values[i]);
-        }
+
         return new UniformSnapshot(copy);
     }
 

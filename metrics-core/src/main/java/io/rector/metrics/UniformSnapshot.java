@@ -28,9 +28,8 @@ public class UniformSnapshot extends Snapshot
         final Object[] copy = values.toArray();
         this.values = new long[copy.length];
         for (int i = 0; i < copy.length; i++)
-        {
             this.values[i] = (Long) copy[i];
-        }
+
         Arrays.sort(this.values);
     }
 
