@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * </ul>
  *
  */
-public class Apdex implements AutoCloseable
+public class Apdex
 {
     private static final Logger log = LoggerFactory.getLogger(Apdex.class);
 
@@ -55,9 +55,10 @@ public class Apdex implements AutoCloseable
         this.provider = new ApdexProvider(reservoir, seconds);
     }
 
-    public static Apdex track(final String tag)
+    public static ApdexContext track(final String tag)
     {
-        return null;
+
+        return new ApdexContext();
     }
 
     public <T> T track(final Supplier<T> action)
@@ -83,11 +84,5 @@ public class Apdex implements AutoCloseable
 
         if(log.isDebugEnabled())
             log.debug("apdex track ::{} ms | {} s", duration, TimeUnit.NANOSECONDS.toSeconds(duration));
-    }
-
-    @Override
-    public void close()
-    {
-
     }
 }
