@@ -28,6 +28,10 @@ public class Apdex
 {
     private static final Logger log = LoggerFactory.getLogger(Apdex.class);
 
+    private final int size;
+
+    private final ApdexOptions options;
+
     private Clock clock;
 
     private ApdexProvider provider;
@@ -45,15 +49,18 @@ public class Apdex
         Objects.requireNonNull(clock);
         Objects.requireNonNull(options);
 
-        Reservoir reservoir;
-
-        if (size == 0)
-            reservoir = new UniformReservoir();
-        else
-            reservoir = new SlidingWindowReservoir(size);
-
+        this.size = size;
         this.clock = clock;
-        this.provider = new ApdexProvider(reservoir, options);
+        this.options = options;
+        this.provider = new ApdexProvider(createReservoir(size), options);
+    }
+
+    private Reservoir createReservoir(int size)
+    {
+        if (size == 0)
+            return  new UniformReservoir();
+        else
+            return  new SlidingWindowReservoir(size);
     }
 
     public <T> T track(final Supplier<T> action)
@@ -89,5 +96,13 @@ public class Apdex
     public ApdexSnapshot getSnapshot()
     {
         return provider.getSnapshot();
+    }
+
+    /**
+     * Reset current state
+     */
+    public void reset()
+    {
+        provider = new ApdexProvider(createReservoir(size), options);
     }
 }

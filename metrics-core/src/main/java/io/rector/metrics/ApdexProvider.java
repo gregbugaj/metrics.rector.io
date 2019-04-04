@@ -29,7 +29,6 @@ public class ApdexProvider
     public ApdexSnapshot getSnapshot()
     {
         final Snapshot snapshot = reservoir.getSnapshot();
-
         return new ApdexSnapshot(snapshot.getValues(), millis);
     }
 }

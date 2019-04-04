@@ -20,13 +20,23 @@ public class ApdexSnapshot
 
     public ApdexSnapshot(final long[] values, final long durationInMillis)
     {
-        size = values.length;
+        this.size = values.length;
         final long durationInNanos = TimeUnit.MILLISECONDS.toNanos(durationInMillis);
         final long factorOfFour = 4 * durationInNanos;
 
-        satisfiedSize = (int) LongStream.of(values).filter(t -> t <= durationInNanos).count();
-        frustratingSize = (int) LongStream.of(values).filter(t -> t > factorOfFour).count();
-        toleratingSize = (int) LongStream.of(values).filter(t -> t > durationInNanos && t <= factorOfFour).count();
+        // values are in ml so need to convert them nanos
+        for(int  i= 0; i < values.length;++i)
+        {
+            long val = values[i];
+            long t = TimeUnit.MILLISECONDS.toNanos(val);
+
+            if(t <= durationInNanos)
+                satisfiedSize++;
+            else if(t > factorOfFour)
+                frustratingSize++;
+            else  if(t > durationInNanos && t <= factorOfFour)
+                toleratingSize++;
+        }
     }
 
     public int getFrustratingSize()
@@ -56,5 +66,4 @@ public class ApdexSnapshot
         return String.format("size, satisfied, tolerating, frustrating [%s, %s, %s, %s]",
                              size, satisfiedSize, toleratingSize, frustratingSize);
     }
-
 }
