@@ -11,18 +11,21 @@ public class ApdexSnapshot
 
     private int toleratingSize;
 
-    public ApdexSnapshot(final Snapshot snapshot, final long apdexTSeconds)
+    private int size;
+
+    public ApdexSnapshot(final Snapshot snapshot, final long millis)
     {
-        this(snapshot.getValues(), apdexTSeconds);
+        this(snapshot.getValues(), millis);
     }
 
-    public ApdexSnapshot(final long[] values, final long durationInSeconds)
+    public ApdexSnapshot(final long[] values, final long durationInMillis)
     {
-        final long durationInNanos = TimeUnit.SECONDS.toNanos(durationInSeconds);
-        final double factorOfFour = 4.0 * durationInNanos;
+        size = values.length;
+        final long durationInNanos = TimeUnit.MILLISECONDS.toNanos(durationInMillis);
+        final long factorOfFour = 4 * durationInNanos;
 
+        satisfiedSize = (int) LongStream.of(values).filter(t -> t <= durationInNanos).count();
         frustratingSize = (int) LongStream.of(values).filter(t -> t > factorOfFour).count();
-        satisfiedSize = (int) LongStream.of(values).filter(t -> t < durationInNanos).count();
         toleratingSize = (int) LongStream.of(values).filter(t -> t > durationInNanos && t <= factorOfFour).count();
     }
 
@@ -35,8 +38,23 @@ public class ApdexSnapshot
     {
         return satisfiedSize;
     }
+
     public int getToleratingSize()
     {
         return toleratingSize;
     }
+
+
+    public int getSize()
+    {
+        return size;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("size, satisfied, tolerating, frustrating [%s, %s, %s, %s]",
+                             size, satisfiedSize, toleratingSize, frustratingSize);
+    }
+
 }

@@ -32,16 +32,18 @@ public class Apdex
 
     private ApdexProvider provider;
 
-    public Apdex(int size)
+    public Apdex(int size, final ApdexOptions options)
     {
-        this(size, Clock.defaultClock());
+        this(size, options, Clock.defaultClock());
     }
 
-    public Apdex(int size, final Clock clock)
+    public Apdex(int size, final ApdexOptions options, final Clock clock)
     {
-        Objects.requireNonNull(clock);
         if (size < 0)
             throw new IllegalArgumentException("Size needs to be greater than 0 got " + size);
+
+        Objects.requireNonNull(clock);
+        Objects.requireNonNull(options);
 
         Reservoir reservoir;
 
@@ -50,15 +52,8 @@ public class Apdex
         else
             reservoir = new SlidingWindowReservoir(size);
 
-        final long seconds  = 5;
         this.clock = clock;
-        this.provider = new ApdexProvider(reservoir, seconds);
-    }
-
-    public static ApdexContext track(final String tag)
-    {
-
-        return new ApdexContext();
+        this.provider = new ApdexProvider(reservoir, options);
     }
 
     public <T> T track(final Supplier<T> action)
@@ -84,5 +79,15 @@ public class Apdex
 
         if(log.isDebugEnabled())
             log.debug("apdex track ::{} ms | {} s", duration, TimeUnit.NANOSECONDS.toSeconds(duration));
+    }
+
+    public ApdexContext newContext()
+    {
+        return new ApdexContext(clock, provider);
+    }
+
+    public ApdexSnapshot getSnapshot()
+    {
+        return provider.getSnapshot();
     }
 }
