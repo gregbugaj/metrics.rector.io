@@ -1,4 +1,4 @@
-package io.rector.metrics.publisher.opentsdb;
+package io.rector.metrics.publisher.influxdb;
 
 import io.rector.metrics.*;
 import org.influxdb.InfluxDB;
@@ -7,8 +7,6 @@ import org.influxdb.dto.Pong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
