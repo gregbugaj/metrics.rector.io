@@ -63,36 +63,78 @@ public class Apdex
             return  new SlidingWindowReservoir(size);
     }
 
+    /**
+     * Track supplied action
+     * @param action the action to track
+     * @param <T> the return type value
+     * @return
+     */
     public <T> T track(final Supplier<T> action)
     {
-        Objects.requireNonNull(action);
+        if(action == null)
+            return null;
+
         final long s = clock.getTick();
+
         try
         {
             return action.get();
         }
         finally
         {
-            track(clock.getTick() - s);
+            _track(clock.getTick() - s);
         }
     }
 
+    /**
+     * Add new data point with given duration with time conversion applied from supplied {@link ApdexOptions}
+     * @param duration the duration in TimeUnit from {@link ApdexOptions}
+     */
     public void track(final long duration)
     {
         if(duration < 0)
             return ;
 
-        provider.update(duration);
+        final TimeUnit unit = options.getUnit();
+        final long durationInNanos = unit.toNanos(duration);
 
-        if(log.isDebugEnabled())
-            log.debug("apdex track ::{} ms | {} s", duration, TimeUnit.NANOSECONDS.toSeconds(duration));
+        _track(durationInNanos);
     }
 
+    private void _track(final long durationInNanon)
+    {
+        if(durationInNanon < 0)
+            return ;
+
+        provider.update(durationInNanon);
+
+        if(log.isDebugEnabled())
+            log.debug("apdex track ::{} ms | {} s", durationInNanon, TimeUnit.NANOSECONDS.toMillis(durationInNanon));
+    }
+
+    /**
+     * Add new data point with supplied duration
+     * @param unit
+     * @param duration
+     */
+    public void track(final TimeUnit unit, final long duration)
+    {
+        _track(unit.toNanos(duration));
+    }
+
+    /**
+     * Obtain new {@link ApdexContext}
+     * @return
+     */
     public ApdexContext newContext()
     {
         return new ApdexContext(clock, provider);
     }
 
+    /**
+     * Get data snapshot {@link ApdexSnapshot}
+     * @return
+     */
     public ApdexSnapshot getSnapshot()
     {
         return provider.getSnapshot();

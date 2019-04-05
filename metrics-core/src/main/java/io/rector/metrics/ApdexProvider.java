@@ -7,7 +7,7 @@ public class ApdexProvider
 {
     private Reservoir reservoir;
 
-    private long millis;
+    private long nanos;
 
     public ApdexProvider(final Reservoir reservoir, final ApdexOptions options)
     {
@@ -18,7 +18,7 @@ public class ApdexProvider
         final TimeUnit unit = options.getUnit();
 
         this.reservoir = reservoir;
-        this.millis = unit.toMillis(duration);
+        this.nanos = unit.toNanos(duration);
     }
 
     public void update(long value)
@@ -29,6 +29,6 @@ public class ApdexProvider
     public ApdexSnapshot getSnapshot()
     {
         final Snapshot snapshot = reservoir.getSnapshot();
-        return new ApdexSnapshot(snapshot.getValues(), millis);
+        return new ApdexSnapshot(snapshot.getValues(), nanos);
     }
 }

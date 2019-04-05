@@ -13,15 +13,14 @@ public class ApdexSnapshot
 
     private int size;
 
-    public ApdexSnapshot(final Snapshot snapshot, final long millis)
+    public ApdexSnapshot(final Snapshot snapshot, final long nanos)
     {
-        this(snapshot.getValues(), millis);
+        this(snapshot.getValues(), nanos);
     }
 
-    public ApdexSnapshot(final long[] values, final long durationInMillis)
+    public ApdexSnapshot(final long[] values, final long durationInNanos)
     {
         this.size = values.length;
-        final long durationInNanos = TimeUnit.MILLISECONDS.toNanos(durationInMillis);
         final long factorOfFour = 4 * durationInNanos;
 
         // values are in ml so need to convert them nanos
@@ -39,22 +38,37 @@ public class ApdexSnapshot
         }
     }
 
+    /**
+     * Get number of frustrating requests
+     * @return
+     */
     public int getFrustratingSize()
     {
         return frustratingSize;
     }
 
+    /**
+     * Get number of satisfied requests
+     * @return
+     */
     public int getSatisfiedSize()
     {
         return satisfiedSize;
     }
 
+    /**
+     * Get number of tolerating requests
+     * @return
+     */
     public int getToleratingSize()
     {
         return toleratingSize;
     }
 
-
+    /**
+     * Get sample size
+     * @return
+     */
     public int getSize()
     {
         return size;

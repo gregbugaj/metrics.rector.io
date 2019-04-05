@@ -8,6 +8,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class ApdexOptions
 {
+    /**
+     * Duration in nanoseconds
+     */
     private final long duration;
 
     private final TimeUnit unit;
@@ -16,14 +19,14 @@ public class ApdexOptions
 
     public ApdexOptions(final String name, long duration, TimeUnit unit)
     {
+        this.duration = unit.toNanos(duration);
         this.name = name;
-        this.duration = duration;
         this.unit = unit;
     }
 
     public ApdexOptions(final String name, final Duration duration)
     {
-        this(name, TimeUnit.NANOSECONDS.toMillis(duration.getNano()), TimeUnit.MILLISECONDS);
+        this(name, duration.getNano(), TimeUnit.NANOSECONDS);
     }
 
     public static ApdexOptions of(final String name, long duration, final TimeUnit unit)
@@ -36,6 +39,10 @@ public class ApdexOptions
         return new ApdexOptions(name, duration);
     }
 
+    /**
+     * Get duration in nanoseconds
+     * @return
+     */
     public long getDuration()
     {
         return duration;

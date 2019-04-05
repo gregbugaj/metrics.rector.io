@@ -1,13 +1,13 @@
 package io.rector.metrics.test;
 
 import io.rector.metrics.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ApdexTest
 {
@@ -48,6 +48,7 @@ public class ApdexTest
         apdex.track(()->
         {
             clock.advance(TimeUnit.MILLISECONDS, 20);
+
             return 1;
         });
 
@@ -58,7 +59,6 @@ public class ApdexTest
         assertEquals(0, snapshot.getToleratingSize());
         assertEquals(0, snapshot.getFrustratingSize());
     }
-
 
     @Test
     void testDirectUsage()
@@ -100,15 +100,75 @@ public class ApdexTest
         final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
+        // 4 * current request size  + 10
         apdex.track(4 * 100 + 10);
-
         final ApdexSnapshot snapshot = apdex.getSnapshot();
+
         assertEquals(1, snapshot.getSize());
         assertEquals(0, snapshot.getSatisfiedSize());
         assertEquals(0, snapshot.getToleratingSize());
         assertEquals(1, snapshot.getFrustratingSize());
     }
 
+    @Test
+    void trackAfterExceptionFromAction()
+    {
+        final TestClock clock = new TestClock();
+        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final Apdex apdex = new Apdex(5, options, clock);
+
+        Throwable throwable = null;
+        try
+        {
+            apdex.track(()->
+            {
+                throw new IllegalStateException();
+            });
+        }
+        catch (final Exception ex)
+        {
+            throwable = ex;
+        }
+
+        assertNotNull(throwable);
+
+        final ApdexSnapshot snapshot = apdex.getSnapshot();
+
+        assertEquals(1, snapshot.getSize());
+        assertEquals(1, snapshot.getSatisfiedSize());
+        assertEquals(0, snapshot.getToleratingSize());
+        assertEquals(0, snapshot.getFrustratingSize());
+    }
+
+    @Test
+    void trackAfterExceptionFromContext()
+    {
+        final TestClock clock = new TestClock();
+        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final Apdex apdex = new Apdex(5, options, clock);
+
+        Throwable throwable;
+        try
+        {
+            try(final ApdexContext context = apdex.newContext())
+            {
+                throw new IllegalStateException();
+            }
+        }
+        catch (final Exception ex)
+        {
+            throwable = ex;
+        }
+
+        assertNotNull(throwable);
+
+        final ApdexSnapshot snapshot = apdex.getSnapshot();
+
+        assertEquals(1, snapshot.getSize());
+        assertEquals(1, snapshot.getSatisfiedSize());
+        assertEquals(0, snapshot.getToleratingSize());
+        assertEquals(0, snapshot.getFrustratingSize());
+    }
 
     @Test
     void testReset()
@@ -123,7 +183,6 @@ public class ApdexTest
         }
 
         ApdexSnapshot snapshot = apdex.getSnapshot();
-        System.out.println(snapshot);
 
         assertEquals(1, snapshot.getSize());
         assertEquals(1, snapshot.getSatisfiedSize());
