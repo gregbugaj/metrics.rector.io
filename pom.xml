@@ -10,6 +10,7 @@
 	<modules>
 		<!--<module>metrics-publisher-database</module>-->
 		<module>metrics-publisher-opentsdb</module>
+		<module>metrics-publisher-influxdb</module>
 		<module>metrics-publisher-csv</module>
 		<module>metrics-core</module>
 	</modules>

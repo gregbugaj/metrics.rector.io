@@ -13,7 +13,7 @@ public abstract class BasePublisher implements Publisher
      * @param name
      * @param metric
      */
-    public Message asMessage(String name, final Monitor<?> metric)
+    public Message asMessage(final String name, final Monitor<?> metric)
     {
         final Message msg = new Message();
 

@@ -66,7 +66,8 @@ public class CsvPublisher extends BasePublisher
             // message format
             // "logdate", "eventtime", "application", "probe", "probetype", "value", "source", "metrictype"
             final String logDate = "" + System.currentTimeMillis();
-            metrics.forEach((name, metric)->{
+            metrics.forEach((name, metric)->
+            {
                 try
                 {
                     final Message msg = asMessage(name, metric);
@@ -108,7 +109,7 @@ public class CsvPublisher extends BasePublisher
 
     public void start()
     {
-        executor.scheduleAtFixedRate(this::publisher,time, time, unit);
+        executor.scheduleAtFixedRate(this::publisher, time, time, unit);
     }
 
     public static class Builder
