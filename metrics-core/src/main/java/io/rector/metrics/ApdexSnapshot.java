@@ -1,7 +1,6 @@
 package io.rector.metrics;
 
 import java.util.concurrent.TimeUnit;
-import java.util.stream.LongStream;
 
 public class ApdexSnapshot
 {
