@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -68,6 +71,17 @@ public class TimescaleDbPublisher implements Publisher
         {
             try
             {
+                try (final Connection connection = datasource.getConnection();
+                     final Statement statement = connection.createStatement())
+                {
+
+                    //final long[] id = statement.executeLargeBatch();
+                }
+                catch (SQLException e)
+                {
+                    log.warn("Error running update statement", e);
+                }
+
                 final Message msg = asMessage(name, metric);
                 final String time = "" + msg.getTime();
                 final String appId = msg.getAppId();
