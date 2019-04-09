@@ -150,6 +150,8 @@ public class Apdex implements Monitor<Double>
 
     /**
      * Get the score for this Apdex
+     *  0 : Failing
+     *  1 : Satisfied
      * ( Satisfied requests + ( Tolerating requests / 2 ) ) ) / Total number of requests
      * @return score in 0..1 range
      */

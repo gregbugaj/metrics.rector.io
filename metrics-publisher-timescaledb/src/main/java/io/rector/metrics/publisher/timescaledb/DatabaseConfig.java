@@ -14,79 +14,6 @@ public class DatabaseConfig
 
     private Boolean skipConnectionTest = false;
 
-    /**
-     * @return the url
-     */
-    public String getUrl()
-    {
-        return url;
-    }
-
-    /**
-     * @param url
-     *            the url to set
-     */
-    public void setUrl(final String url)
-    {
-        this.url = url;
-    }
-
-    /**
-     * @return the username
-     */
-    public String getUsername()
-    {
-        return username;
-    }
-
-    /**
-     * @param username
-     *            the username to set
-     */
-    public void setUsername(final String username)
-    {
-        this.username = username;
-    }
-
-    /**
-     * @return the password
-     */
-    public String getPassword()
-    {
-        return password;
-    }
-
-    /**
-     * @param password
-     *            the password to set
-     */
-    public void setPassword(final String password)
-    {
-        this.password = password;
-    }
-
-    /**
-     * @return the driverClassName
-     */
-    public String getDriverClassName()
-    {
-        return driverClassName;
-    }
-
-    /**
-     * @param driverClassName
-     *            the driverClassName to set
-     */
-    public void setDriverClassName(final String driverClassName)
-    {
-        this.driverClassName = driverClassName;
-    }
-
-    public int getMaximumPoolSize()
-    {
-        return maximumPoolSize;
-    }
-
     public DatabaseConfig setMaximumPoolSize(final int maximumPoolSize)
     {
         this.maximumPoolSize = maximumPoolSize;
@@ -102,5 +29,54 @@ public class DatabaseConfig
     {
         this.skipConnectionTest = skipConnectionTest;
         return this;
+    }
+
+    public String getUrl()
+    {
+        return url;
+    }
+
+    public DatabaseConfig setUrl(final String url)
+    {
+        this.url = url;
+        return this;
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public DatabaseConfig setUsername(final String username)
+    {
+        this.username = username;
+        return this;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public DatabaseConfig setPassword(final String password)
+    {
+        this.password = password;
+        return this;
+    }
+
+    public String getDriverClassName()
+    {
+        return driverClassName;
+    }
+
+    public DatabaseConfig setDriverClassName(final String driverClassName)
+    {
+        this.driverClassName = driverClassName;
+        return this;
+    }
+
+    public int getMaximumPoolSize()
+    {
+        return maximumPoolSize;
     }
 }

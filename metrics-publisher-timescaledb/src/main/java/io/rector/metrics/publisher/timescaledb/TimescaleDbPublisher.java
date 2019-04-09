@@ -147,7 +147,6 @@ public class TimescaleDbPublisher implements Publisher
         {
             log.warn("Error running update statement", e);
         }
-
     }
 
     /**
@@ -189,6 +188,11 @@ public class TimescaleDbPublisher implements Publisher
         config.setLeakDetectionThreshold(60000);
 
         return new HikariDataSource(config);
+    }
+
+    public static  Builder with(final MonitorRegistry registry, final DatabaseConfig options)
+    {
+        return new Builder(registry, options);
     }
 
     public static class Builder

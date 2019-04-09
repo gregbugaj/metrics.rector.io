@@ -62,7 +62,6 @@ public interface MonitorRegistry
      */
     Apdex apdex(final String name);
 
-
     /**
      * Create or retrieve apdex monitor, {@link Apdex} will be create on first access
      *

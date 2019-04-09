@@ -204,9 +204,41 @@ public class ApdexTest
         final MonitorRegistry registry = MonitorRegistry.get("apdex.01");
         final Apdex apdex = registry.apdex("metric.apdex", ApdexOptions.of(100, TimeUnit.MILLISECONDS));
 
-        apdex.track(100);
+        assertNotNull(apdex);
+        assertNotNull(apdex.getSnapshot());
+    }
+
+
+    @Test
+    void apedAcquisitionFromRegistryWithScore()
+    {
+        final MonitorRegistry registry = MonitorRegistry.get("apdex.01");
+        final Apdex apdex = registry.apdex("metric.apdex", ApdexOptions.of(100, TimeUnit.MILLISECONDS));
+
+        apdex.track(10);
+        apdex.track(10);
+        apdex.track(10);
+        apdex.track(10);
+        apdex.track(10);
 
         final ApdexSnapshot snapshot = apdex.getSnapshot();
         assertNotNull(snapshot);
+        assertEquals(new Double(1.0), apdex.getValue());
+    }
+
+    @Test
+    void apedAcquisitionFromRegistryWithScore02()
+    {
+        final MonitorRegistry registry = MonitorRegistry.get("apdex.02");
+        final Apdex apdex = registry.apdex("metric.apdex", ApdexOptions.of(100, TimeUnit.MILLISECONDS));
+
+        apdex.track(10);
+        apdex.track(10);
+        apdex.track(200);
+        apdex.track(200);
+
+        final ApdexSnapshot snapshot = apdex.getSnapshot();
+        assertNotNull(snapshot);
+        assertEquals(new Double(.75), apdex.getValue());
     }
 }
