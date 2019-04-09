@@ -15,7 +15,7 @@ public class ApdexTest
     void testContextUsage()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         try(final ApdexContext context = apdex.newContext())
@@ -41,7 +41,7 @@ public class ApdexTest
     void testFunctionUsage()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         apdex.track(()->
@@ -63,7 +63,7 @@ public class ApdexTest
     void testDirectUsage()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         apdex.track(20);
@@ -80,7 +80,7 @@ public class ApdexTest
     void testMetricCalculationForTolerating()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         apdex.track(120);
@@ -96,7 +96,7 @@ public class ApdexTest
     void testMetricCalculationForFrustrating()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         // 4 * current request size  + 10
@@ -113,7 +113,7 @@ public class ApdexTest
     void trackAfterExceptionFromAction()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         Throwable throwable = null;
@@ -143,7 +143,7 @@ public class ApdexTest
     void trackAfterExceptionFromContext()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         Throwable throwable;
@@ -173,7 +173,7 @@ public class ApdexTest
     void testReset()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of("apdex.test1", 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         try(final ApdexContext context = apdex.newContext())
@@ -183,6 +183,7 @@ public class ApdexTest
 
         ApdexSnapshot snapshot = apdex.getSnapshot();
 
+        assertNotNull(snapshot);
         assertEquals(1, snapshot.getSize());
         assertEquals(1, snapshot.getSatisfiedSize());
         assertEquals(0, snapshot.getToleratingSize());
@@ -198,8 +199,14 @@ public class ApdexTest
     }
 
     @Test
-    void monitorTest()
+    void apedAcquisitionFromRegistry()
     {
         final MonitorRegistry registry = MonitorRegistry.get("apdex.01");
+        final Apdex apdex = registry.apdex("metric.apdex", ApdexOptions.of(100, TimeUnit.MILLISECONDS));
+
+        apdex.track(100);
+
+        final ApdexSnapshot snapshot = apdex.getSnapshot();
+        assertNotNull(snapshot);
     }
 }

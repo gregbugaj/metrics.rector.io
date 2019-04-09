@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static io.rector.metrics.MonitorRegistry.Factory.getInstance;
 
@@ -52,6 +53,25 @@ public interface MonitorRegistry
     Gauge gauge(final String name);
 
     Gauge gauge(final String name, final MetricSupplier<Gauge> supplier);
+
+    /**
+     * Create or retrieve apdex monitor, {@link Apdex} will be create on first access
+     *
+     * @param name the name of the apdex monitor
+     * @return new instance of Apdex or existing one if the apdex already exist with given name
+     */
+    Apdex apdex(final String name);
+
+
+    /**
+     * Create or retrieve apdex monitor, {@link Apdex} will be create on first access
+     *
+     * @param name the name of the apdex monitor
+     * @param options the apdex options
+     * @return new instance of Apdex or existing one if the apdex already exist with given name
+     */
+    Apdex apdex(final String name, final ApdexOptions options);
+
 
     /**
      * Create or retrieve counter, {@link Counter} will be created on first access
@@ -152,7 +172,7 @@ public interface MonitorRegistry
         {
             try
             {
-                return registerNoThrow(name, monitor);
+                return register(name, monitor);
             }
             catch(IllegalArgumentException ex)
             {
@@ -223,6 +243,32 @@ public interface MonitorRegistry
                  return Gauge.class.isInstance(monitor);
              }
          });
+        }
+
+        @Override
+        public Apdex apdex(final String name)
+        {
+            final ApdexOptions options  = ApdexOptions.of(1, TimeUnit.SECONDS);
+            return apdex(name, options);
+        }
+
+        @Override
+        public Apdex apdex(final String name, final ApdexOptions options)
+        {
+            return getOrAdd(name, new MetricBuilder<Apdex>()
+            {
+                @Override
+                public Apdex newMetric()
+                {
+                    return new Apdex(10, options);
+                }
+
+                @Override
+                public boolean isInstance(final Monitor<?> monitor)
+                {
+                    return Apdex.class.isInstance(monitor);
+                }
+            });
         }
 
         @Override

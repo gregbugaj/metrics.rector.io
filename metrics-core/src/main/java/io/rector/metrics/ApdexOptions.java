@@ -15,28 +15,25 @@ public class ApdexOptions
 
     private final TimeUnit unit;
 
-    private String name;
-
-    public ApdexOptions(final String name, long duration, TimeUnit unit)
+    public ApdexOptions(long duration, TimeUnit unit)
     {
         this.duration = unit.toNanos(duration);
-        this.name = name;
         this.unit = unit;
     }
 
-    public ApdexOptions(final String name, final Duration duration)
+    public ApdexOptions(final Duration duration)
     {
-        this(name, duration.getNano(), TimeUnit.NANOSECONDS);
+        this(duration.getNano(), TimeUnit.NANOSECONDS);
     }
 
-    public static ApdexOptions of(final String name, long duration, final TimeUnit unit)
+    public static ApdexOptions of(long duration, final TimeUnit unit)
     {
-        return new ApdexOptions(name, duration, unit);
+        return new ApdexOptions(duration, unit);
     }
 
-    public static ApdexOptions of(final String name, final Duration duration)
+    public static ApdexOptions of(final Duration duration)
     {
-        return new ApdexOptions(name, duration);
+        return new ApdexOptions(duration);
     }
 
     /**
@@ -52,4 +49,6 @@ public class ApdexOptions
     {
         return unit;
     }
+
+
 }

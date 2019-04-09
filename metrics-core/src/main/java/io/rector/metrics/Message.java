@@ -39,7 +39,7 @@ public class Message
     private long time;
 
     /**
-     * Additional attributes associated witht the message
+     * Additional attributes associated with the message
      */
     private Map<String, Object> attributes;
 
@@ -140,7 +140,8 @@ public class Message
         return sb.toString();
     }
 
-    public Map<String, Object> getAttributes() {
+    public Map<String, Object> getAttributes()
+    {
         return attributes;
     }
 
@@ -201,11 +202,29 @@ public class Message
             return type + "," + value;
         }
 
-        public Object getValueAsString()
+        public String getValueAsString()
         {
             if(value == null)
                 return "";
             return value.toString();
+        }
+
+        /**
+         * Get numeric value
+         * @return
+         */
+        public Number getValueAsNumber()
+        {
+            if(value == null)
+                return 0;
+
+            switch (type)
+            {
+                case NUMBER: return (Number) value;
+                case STRING: return 0;
+            }
+
+            return 0;
         }
     }
 }

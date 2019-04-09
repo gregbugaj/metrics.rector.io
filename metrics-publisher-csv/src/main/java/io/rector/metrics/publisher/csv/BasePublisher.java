@@ -6,7 +6,6 @@ import io.rector.metrics.Publisher;
 
 public abstract class BasePublisher implements Publisher
 {
-
     /**
      * Get all metrics associated with this registry as {@link Message}
      * @return collection of {@link Message}

@@ -9,5 +9,6 @@ public enum MetricType
     COUNTER,
     TIMER,
     HISTOGRAM,
-    COMPOSITE
+    COMPOSITE,
+    APDEX
 }

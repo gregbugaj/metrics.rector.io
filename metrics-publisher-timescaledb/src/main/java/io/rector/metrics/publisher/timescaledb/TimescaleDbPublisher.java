@@ -11,8 +11,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -66,28 +65,57 @@ public class TimescaleDbPublisher implements Publisher
     private synchronized void publisher()
     {
         final Map<String, Monitor<?>> metrics = registry.getMetrics();
+        final List<String> batch = new ArrayList<>();
         final String logDate = "" + System.currentTimeMillis();
+
         metrics.forEach((name, metric)->
         {
             try
             {
-                try (final Connection connection = datasource.getConnection();
-                     final Statement statement = connection.createStatement())
-                {
-
-                    //final long[] id = statement.executeLargeBatch();
-                }
-                catch (SQLException e)
-                {
-                    log.warn("Error running update statement", e);
-                }
-
                 final Message msg = asMessage(name, metric);
-                final String time = "" + msg.getTime();
+                final String time = Long.toString(msg.getTime());
                 final String appId = msg.getAppId();
                 final Message.ValueObject value = msg.getValue();
+                final String valueAsString = value.getValueAsString();
+                final Number valueAsNumber = value.getValueAsNumber();
+
                 final String source = msg.getSource();
                 final MetricType type = msg.getMonitorType();
+                final Map<String, Object> attributes = msg.getAttributes();
+
+                /**
+                 time            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW()),
+                 event           TIMESTAMP WITH TIME ZONE NOT NULL,
+                 application     TEXT,                                 -- Application name
+                 UUID            UUID DEFAULT uuid_generate_v4(),      -- Unique ID for the event tracked
+                 probe           TEXT,                                 -- Probe for the monitor
+                 probe_type      TEXT,                                 -- Probe type
+                 value_str       TEXT,                                 -- String value
+                 value_num       DOUBLE PRECISION,                     -- Numeric value
+                 source_address  TEXT,                                 -- Source of the event
+                 metric_type     TEXT,                                 --
+                 data            JSONB                                 -- JSON Payload if any
+                 */
+
+                String format ="INSERT INTO message(time, event, application, UUID,  probe, probe_type, value_str, value_num, source_address, metric_type, data)" +
+                        "VALUES (NOW(), '%1$s', '%2$s', '%3$s', '%4$s', '%5$s', '%6$s', %7$s, '%8$s', '%9$s', '%10$s')";
+
+                String query = String.format(format,
+                                             time,
+                                             appId,
+                                             UUID.randomUUID(),
+                                             "",
+                                             "",
+                                             "",
+                                             valueAsString,
+                                             valueAsNumber,
+                                             source,
+                                             type.name(),
+                                             ""
+                );
+
+                System.out.println(query);
+                batch.add(query);
 
                 if(resetOnReporting)
                 {
@@ -102,6 +130,24 @@ public class TimescaleDbPublisher implements Publisher
                 log.error("Unable to store metric : " + name, ex);
             }
         });
+
+
+        try (final Connection connection = datasource.getConnection();
+                final Statement statement = connection.createStatement())
+        {
+            for(final String query : batch)
+            {
+                statement.addBatch(query);
+            }
+
+            final long[] ids = statement.executeLargeBatch();
+            log.info("Total records inserted : {}", ids.length);
+        }
+        catch (SQLException e)
+        {
+            log.warn("Error running update statement", e);
+        }
+
     }
 
     /**

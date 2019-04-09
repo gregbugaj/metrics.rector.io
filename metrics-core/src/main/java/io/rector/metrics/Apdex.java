@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * </ul>
  *
  */
-public class Apdex
+public class Apdex implements Monitor<Double>
 {
     private static final Logger log = LoggerFactory.getLogger(Apdex.class);
 
@@ -146,5 +146,37 @@ public class Apdex
     public void reset()
     {
         provider = new ApdexProvider(createReservoir(size), options);
+    }
+
+    /**
+     * Get the score for this Apdex
+     * ( Satisfied requests + ( Tolerating requests / 2 ) ) ) / Total number of requests
+     * @return score in 0..1 range
+     */
+    @Override
+    public Double getValue()
+    {
+        final ApdexSnapshot snapshot = getSnapshot();
+        if(snapshot == null || snapshot.getSize() == 0)
+            return 0.0D;
+
+        final int satisfied = snapshot.getSatisfiedSize();
+        final int tolerating = snapshot.getToleratingSize();
+        final int total = snapshot.getSize();
+        double score = (satisfied + (tolerating / 2.0)) / total;
+
+        return score;
+    }
+
+    @Override
+    public Type getType()
+    {
+        return Type.NUMBER;
+    }
+
+    @Override
+    public MetricType getMonitorType()
+    {
+        return MetricType.APDEX;
     }
 }
