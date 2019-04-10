@@ -17,3 +17,9 @@ CREATE TABLE IF NOT EXISTS tracked_events
     metric_type     TEXT,                                 --
     data            JSONB                                 -- JSON Payload if any
 );
+
+
+-- This creates a hypertable that is partitioned by time
+--   using the values in the `time` column.
+
+SELECT create_hypertable('tracked_events', 'time');

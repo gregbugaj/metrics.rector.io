@@ -1,7 +1,11 @@
 package io.rector.metrics.publisher.timescaledb;
 
+import io.rector.metrics.Apdex;
+import io.rector.metrics.ApdexContext;
+import io.rector.metrics.ApdexOptions;
 import io.rector.metrics.MonitorRegistry;
 
+import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
 public class ApdexTimescaleDbPublisherTest
@@ -13,13 +17,13 @@ public class ApdexTimescaleDbPublisherTest
 
     private void run(final String[] args) throws InterruptedException
     {
-        final MonitorRegistry registry = MonitorRegistry.get("test-001");
+        final MonitorRegistry registry = MonitorRegistry.get("apdex-001");
 
         final DatabaseConfig options = new DatabaseConfig();
         options
                 .setUsername("service")
                 .setPassword("service")
-                .setUrl("jdbc:postgresql://localhost/telemetry")
+                .setUrl("jdbc:postgresql://localhost:5432/telemetry")
                 .setDriverClassName("org.postgresql.Driver")
                 .setMaximumPoolSize(10)
                 .setSkipConnectionTest(false);
@@ -32,15 +36,20 @@ public class ApdexTimescaleDbPublisherTest
 
         publisher.start();
 
-        Thread.currentThread().join();
-
-     /*   final Gauge gauge = registry.gauge("sample.gauge.memory");
+        final Apdex apdex = registry.apdex("apdex.sample", ApdexOptions.of(100, TimeUnit.MILLISECONDS));
 
         while(true)
         {
-            System.out.println(gauge);
-            gauge.setValue(System.currentTimeMillis());
-            Thread.sleep(500);
-        }*/
+
+            try(final ApdexContext context = apdex.newContext())
+            {
+                final SecureRandom sr = new SecureRandom();
+                final int sleep = sr.nextInt(350);
+
+                Thread.sleep(sleep);
+            }
+        }
+
+//        Thread.currentThread().join();
     }
 }

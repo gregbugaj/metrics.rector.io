@@ -11,6 +11,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,22 +61,25 @@ public class TimescaleDbPublisher implements Publisher
     @Override
     public void start()
     {
-
+        executor.scheduleAtFixedRate(this::publisher, time, time, unit);
     }
 
-    private synchronized void publisher()
+    private void publisher()
     {
+        final String appName = registry.getName();
         final Map<String, Monitor<?>> metrics = registry.getMetrics();
         final List<String> batch = new ArrayList<>();
-        final String logDate = "" + System.currentTimeMillis();
 
         metrics.forEach((name, metric)->
         {
             try
             {
+                final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
                 final Message msg = asMessage(name, metric);
-                final String time = Long.toString(msg.getTime());
-                final String appId = msg.getAppId();
+                final String time = dateFormat.format(new Date(msg.getTime()));
+                final String appId = appName;// msg.getAppId();
+                final String probe = msg.getName();
+
                 final Message.ValueObject value = msg.getValue();
                 final String valueAsString = value.getValueAsString();
                 final Number valueAsNumber = value.getValueAsNumber();
@@ -83,38 +88,22 @@ public class TimescaleDbPublisher implements Publisher
                 final MetricType type = msg.getMonitorType();
                 final Map<String, Object> attributes = msg.getAttributes();
 
-                /**
-                 time            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW()),
-                 event           TIMESTAMP WITH TIME ZONE NOT NULL,
-                 application     TEXT,                                 -- Application name
-                 UUID            UUID DEFAULT uuid_generate_v4(),      -- Unique ID for the event tracked
-                 probe           TEXT,                                 -- Probe for the monitor
-                 probe_type      TEXT,                                 -- Probe type
-                 value_str       TEXT,                                 -- String value
-                 value_num       DOUBLE PRECISION,                     -- Numeric value
-                 source_address  TEXT,                                 -- Source of the event
-                 metric_type     TEXT,                                 --
-                 data            JSONB                                 -- JSON Payload if any
-                 */
-
-                String format ="INSERT INTO message(time, event, application, UUID,  probe, probe_type, value_str, value_num, source_address, metric_type, data)" +
+                final String format ="INSERT INTO tracked_events(time, event, application, UUID,  probe, probe_type, value_str, value_num, source_address, metric_type, data) \n" +
                         "VALUES (NOW(), '%1$s', '%2$s', '%3$s', '%4$s', '%5$s', '%6$s', %7$s, '%8$s', '%9$s', '%10$s')";
 
                 String query = String.format(format,
                                              time,
                                              appId,
                                              UUID.randomUUID(),
-                                             "",
-                                             "",
-                                             "",
-                                             valueAsString,
+                                             probe,
+                                             probe,
+                                             valueAsString == null ? "" : valueAsString,
                                              valueAsNumber,
-                                             source,
+                                             source == null ? "" : source,
                                              type.name(),
-                                             ""
+                                             "{}"
                 );
 
-                System.out.println(query);
                 batch.add(query);
 
                 if(resetOnReporting)
@@ -127,10 +116,9 @@ public class TimescaleDbPublisher implements Publisher
             }
             catch (final Exception ex)
             {
-                log.error("Unable to store metric : " + name, ex);
+                log.error("Unable to create metric : " + name, ex);
             }
         });
-
 
         try (final Connection connection = datasource.getConnection();
                 final Statement statement = connection.createStatement())
@@ -140,11 +128,12 @@ public class TimescaleDbPublisher implements Publisher
                 statement.addBatch(query);
             }
 
-            final long[] ids = statement.executeLargeBatch();
+            final int[] ids = statement.executeBatch();
             log.info("Total records inserted : {}", ids.length);
         }
         catch (SQLException e)
         {
+            e.printStackTrace();
             log.warn("Error running update statement", e);
         }
     }
@@ -181,11 +170,11 @@ public class TimescaleDbPublisher implements Publisher
         config.setPassword(password);
         config.setMaximumPoolSize(maximumPoolSize);
         config.setDriverClassName(driverClassName);
-        config.setMinimumIdle(0);
+        config.setMinimumIdle(5);
         config.setConnectionTestQuery("SELECT 1");
         config.setMaxLifetime(TimeUnit.MINUTES.toMillis(60));
         config.setTransactionIsolation("TRANSACTION_READ_UNCOMMITTED");
-        config.setLeakDetectionThreshold(60000);
+        config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(10)); // 10000
 
         return new HikariDataSource(config);
     }
@@ -231,5 +220,4 @@ public class TimescaleDbPublisher implements Publisher
             return new TimescaleDbPublisher(registry, options, time, unit, resetOnReporting);
         }
     }
-
 }

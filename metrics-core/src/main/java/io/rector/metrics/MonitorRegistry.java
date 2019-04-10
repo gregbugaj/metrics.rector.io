@@ -25,6 +25,13 @@ public interface MonitorRegistry
     Map<String, Monitor<?>> getMetrics();
 
     /**
+     * Name that this registry is associated with
+     *
+     * @return
+     */
+    String getName();
+
+    /**
      * Register new Monitor
      * @param name of the monitor
      * @param monitor to register
@@ -118,7 +125,7 @@ public interface MonitorRegistry
                 return reg;
 
             // should hit only once
-            final MonitorRegistry value = registry.putIfAbsent(name, new MonitorRegistryDefault());
+            final MonitorRegistry value = registry.putIfAbsent(name, new MonitorRegistryDefault(name));
 
             // race condition between Thred1 and Thread2, so we simply retrieve results from the cache
             if (value == null)
@@ -132,16 +139,25 @@ public interface MonitorRegistry
     {
         private static final Logger log = LoggerFactory.getLogger(MonitorRegistryDefault.class);
 
+        private final String name;
+
         private ConcurrentHashMap<String, Monitor<?>> metrics;
 
-        private MonitorRegistryDefault()
+        private MonitorRegistryDefault(String name)
         {
+            this.name = name;
             metrics = new ConcurrentHashMap<>();
         }
 
         public Map<String, Monitor<?>> getMetrics()
         {
             return Collections.unmodifiableMap(metrics);
+        }
+
+        @Override
+        public String getName()
+        {
+            return name;
         }
 
         @Override
