@@ -1,14 +1,24 @@
+# Metric Types
 
-We have a variety of components to help us measuring performance indicators of our application:
+We have a variety of components to help us measuring performance indicators of our application
 
-Apdex        : Application Performance Index 
-Gauges       : A gauge allows an instant measurement of a value.
-Counters     : A counter is is a gauge for an AtomicLong instance and adds convenience methods to increment or decrement its value.
-Meters       : A meter is used to measure the rate of events over time.
-Histograms   : A histogram allows us to measure the statistical distribution of values in a stream of data.
-Timers       : A timer allows us to measure the rate that a piece of code is called and the distribution of its duration.
 
-# References 
+* Apdex        : Application Performance Index 
+* Gauges       : A gauge allows an instant measurement of a value.
+* Counters     : A counter is is a gauge for an AtomicLong instance and  adds convenience methods to increment or decrement its value.
+* Meters       : A meter is used to measure the rate of events over time.
+* Histograms   : A histogram allows us to measure the statistical distribution of values in a stream of data.
+* Timers       : A timer allows us to measure the rate that a piece of code is called and the distribution of its duration.
+
+# Publishers
+
+* CSV
+* influxdb
+* Timescaledb / PostgreSQL
+
+
+# References
+
 Original code based of CodaHale Metrics
 
 https://instrumentalapp.com/docs/metrician/jobs
