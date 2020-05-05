@@ -8,15 +8,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * CSV metrics publisher
+ * Publish statistics to a csv file
  */
 public class CsvPublisher extends BasePublisher
 {
@@ -24,11 +26,11 @@ public class CsvPublisher extends BasePublisher
 
     private static final String DEFAULT_CSV_FILE = "./metrics.csv";
 
-    private final Path path;
+    private final Appendable appendable;
 
-    private  boolean resetOnReporting;
+    private boolean resetOnReporting;
 
-    private  MonitorRegistry registry;
+    private MonitorRegistry registry;
 
     private long time;
 
@@ -36,20 +38,25 @@ public class CsvPublisher extends BasePublisher
 
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    private CsvPublisher(final Path path)
+    private CsvPublisher(final Path path) throws IOException
     {
-        this.path = Objects.requireNonNull(path);
+        Objects.requireNonNull(path);
+        appendable = new PrintWriter(new FileWriter(path.toFile(), true));
     }
 
-    private CsvPublisher()
+    private CsvPublisher() throws IOException
     {
         this(Paths.get(DEFAULT_CSV_FILE));
     }
 
-    public CsvPublisher(final MonitorRegistry registry, Path path, long time, TimeUnit unit, boolean resetOnReporting)
+    public CsvPublisher(final MonitorRegistry registry,
+                        Appendable appendable,
+                        long time,
+                        TimeUnit unit,
+                        boolean resetOnReporting)
     {
-        this.registry = registry;
-        this.path = path;
+        this.registry = Objects.requireNonNull(registry);
+        this.appendable = Objects.requireNonNull(appendable);
         this.time = time;
         this.unit = unit;
         this.resetOnReporting = resetOnReporting;
@@ -58,40 +65,48 @@ public class CsvPublisher extends BasePublisher
     private synchronized void publisher()
     {
         final Map<String, Monitor<?>> metrics = registry.getMetrics();
-        try (
-                final FileWriter writer = new FileWriter(path.toFile(), true);
-                final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)
-        )
+        try (final CSVPrinter csvPrinter = new CSVPrinter(appendable, CSVFormat.RFC4180))
         {
+            System.out.println("Publishing");
             // message format
             // "logdate", "eventtime", "application", "probe", "probetype", "value", "source", "metrictype"
             final String logDate = "" + System.currentTimeMillis();
-            metrics.forEach((name, metric)->
-            {
-                try
-                {
-                    final Message msg = asMessage(name, metric);
-                    final String time = "" + msg.getTime();
-                    final String appId = msg.getAppId();
-                    final Message.ValueObject value = msg.getValue();
-                    final String source = msg.getSource();
-                    final MetricType type = msg.getMonitorType();
+            metrics.forEach((name, metric) ->
+                            {
+                                System.out.println(" -- " + name);
 
-                    csvPrinter.printRecord(logDate, time, appId, name, type, value.getType(), value.getValueAsString(), source, type);
+                                try
+                                {
+                                    final Message msg = Publisher.asMessage(name, metric);
+                                    final String time = "" + msg.getTime();
+                                    final String appId = msg.getAppId();
+                                    final Message.ValueObject value = msg.getValue();
+                                    final String source = msg.getSource();
+                                    final MetricType type = msg.getMonitorType();
 
-                    if(resetOnReporting)
-                    {
-                        if(metric instanceof Resettable)
-                        {
-                            ((Resettable)metric).reset();
-                        }
-                    }
-                }
-                catch (final IOException ex)
-                {
-                    log.error("Unable to create metric : " + name, ex);
-                }
-            });
+                                    csvPrinter.printRecord(logDate,
+                                                           time,
+                                                           appId,
+                                                           name,
+                                                           type,
+                                                           value.getType(),
+                                                           value.getValueAsString(),
+                                                           source,
+                                                           type);
+
+                                    if (resetOnReporting)
+                                    {
+                                        if (metric instanceof Resettable)
+                                        {
+                                            ((Resettable) metric).reset();
+                                        }
+                                    }
+                                }
+                                catch (final IOException ex)
+                                {
+                                    log.error("Unable to create metric : " + name, ex);
+                                }
+                            });
 
             csvPrinter.flush();
         }
@@ -104,7 +119,14 @@ public class CsvPublisher extends BasePublisher
     public static Builder of(final MonitorRegistry registry, Path path)
     {
         Objects.requireNonNull(registry);
+        Objects.requireNonNull(path);
         return new Builder(registry, path);
+    }
+
+    public static Builder of(final MonitorRegistry registry, final Appendable appendable)
+    {
+        Objects.requireNonNull(registry);
+        return new Builder(registry, appendable);
     }
 
     public void start()
@@ -116,7 +138,9 @@ public class CsvPublisher extends BasePublisher
     {
         private final MonitorRegistry registry;
 
-        private final Path path;
+        private Path path;
+
+        private Appendable appendable;
 
         private long time;
 
@@ -128,6 +152,12 @@ public class CsvPublisher extends BasePublisher
         {
             this.registry = Objects.requireNonNull(registry);
             this.path = Objects.requireNonNull(path);
+        }
+
+        public Builder(final MonitorRegistry registry, final Appendable appendable)
+        {
+            this.registry = Objects.requireNonNull(registry);
+            this.appendable = Objects.requireNonNull(appendable);
         }
 
         public Builder withInterval(long time, TimeUnit unit)
@@ -145,7 +175,23 @@ public class CsvPublisher extends BasePublisher
 
         public CsvPublisher build()
         {
-            return new CsvPublisher(registry, path, time, unit, resetOnReporting);
+            try
+            {
+                if (path != null)
+                {
+                    appendable = new PrintWriter(new FileWriter(path.toFile(), true));
+                }
+                if (appendable == null)
+                {
+                    throw new IllegalStateException("appendable should not be null");
+                }
+
+                return new CsvPublisher(registry, appendable, time, unit, resetOnReporting);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Unable to initialize publisher", e);
+            }
         }
     }
 }

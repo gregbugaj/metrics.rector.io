@@ -1,4 +1,22 @@
 
+CREATE DATABASE telemetry;
+
+CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+
+-- user creation
+
+
+
+CREATE USER service WITH LOGIN PASSWORD 'TopSecret';
+GRANT CONNECT ON DATABASE telemetry to service;
+
+GRANT ALL PRIVILEGES ON DATABASE telemetry  to service;
+
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO service;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO service;
+
+
 DROP TABLE IF EXISTS "tracked_events";
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

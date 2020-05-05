@@ -85,7 +85,7 @@ public class InfluxDbPublisher implements Publisher
         {
             try
             {
-                final Message msg = asMessage(name, metric);
+                final Message msg = Publisher.asMessage(name, metric);
                 final String time = "" + msg.getTime();
                 final String appId = msg.getAppId();
                 final Message.ValueObject value = msg.getValue();
@@ -120,24 +120,6 @@ public class InfluxDbPublisher implements Publisher
     public CompletableFuture<Object> addPoint(final String metric, final long timestamp, final long value, final Map<String, String> tags)
     {
         return null;
-    }
-
-    /**
-     * Get all metrics associated with this registry as {@link Message}
-     * @return collection of {@link Message}
-     * @param name
-     * @param metric
-     */
-    public Message asMessage(final String name, final Monitor<?> metric)
-    {
-        final Message msg = new Message();
-
-        msg.setName(name);
-        msg.setTime(System.currentTimeMillis());
-        msg.setMonitorType(metric.getMonitorType());
-        msg.setValue(new Message.ValueObject(metric.getType(), metric.getValue()));
-
-        return msg;
     }
 
     public static class Builder

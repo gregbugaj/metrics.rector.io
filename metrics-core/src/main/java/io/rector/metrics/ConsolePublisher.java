@@ -6,9 +6,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Published message to the  current logger, messages will not be buffered
  */
-public class ConsoleLoggerPublisher implements Publisher
+public class ConsolePublisher implements Publisher
 {
-    private static final Logger log = LoggerFactory.getLogger(ConsoleLoggerPublisher.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsolePublisher.class);
 
     @Override
     public void start()

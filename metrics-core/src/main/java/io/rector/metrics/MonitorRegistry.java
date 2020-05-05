@@ -33,7 +33,8 @@ public interface MonitorRegistry
 
     /**
      * Register new Monitor
-     * @param name of the monitor
+     *
+     * @param name    of the monitor
      * @param monitor to register
      * @throws IllegalArgumentException when monitor is already registered with given name
      */
@@ -41,19 +42,26 @@ public interface MonitorRegistry
 
     /**
      * Register new {@link MetricSet}
+     *
      * @param metrics to register
      * @throws IllegalArgumentException
      */
     void registerAll(final MetricSet metrics) throws IllegalArgumentException;
 
-    void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2)throws IllegalArgumentException;
+    void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2) throws IllegalArgumentException;
 
-    void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2, final Monitor<?> m3)throws IllegalArgumentException;
+    void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2, final Monitor<?> m3)
+            throws IllegalArgumentException;
 
-    void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2, final Monitor<?> m3, final Monitor<?>... m4) throws IllegalArgumentException;
+    void registerAll(final String prefix,
+                     final Monitor<?> m1,
+                     final Monitor<?> m2,
+                     final Monitor<?> m3,
+                     final Monitor<?>... m4) throws IllegalArgumentException;
 
     /**
      * Create or retrieve gauge, {@link Gauge} will be created on first access
+     *
      * @param name of the gage to get
      * @return new instance of Gauge or existing one if the gage already exist with given name
      */
@@ -72,12 +80,11 @@ public interface MonitorRegistry
     /**
      * Create or retrieve apdex monitor, {@link Apdex} will be create on first access
      *
-     * @param name the name of the apdex monitor
+     * @param name    the name of the apdex monitor
      * @param options the apdex options
      * @return new instance of Apdex or existing one if the apdex already exist with given name
      */
     Apdex apdex(final String name, final ApdexOptions options);
-
 
     /**
      * Create or retrieve counter, {@link Counter} will be created on first access
@@ -104,6 +111,7 @@ public interface MonitorRegistry
 
     /**
      * Get {@link MonitorRegistry} associated with this name
+     *
      * @param name the name of the registry to get
      * @return
      */
@@ -166,17 +174,17 @@ public interface MonitorRegistry
             Objects.requireNonNull(name);
             Objects.requireNonNull(monitor);
 
-            if(monitor.getMonitorType() == MetricType.COMPOSITE)
+            if (monitor.getMonitorType() == MetricType.COMPOSITE)
             {
-                registerAll(name, (MetricSet)monitor);
+                registerAll(name, (MetricSet) monitor);
             }
             else
             {
                 Monitor<?> existing = metrics.putIfAbsent(name, monitor);
 
-                if(existing != null)
+                if (existing != null)
                 {
-                    throw new IllegalStateException("Metric named '" +name+"' already exists");
+                    throw new IllegalStateException("Metric named '" + name + "' already exists");
                 }
             }
 
@@ -189,7 +197,7 @@ public interface MonitorRegistry
             {
                 return register(name, monitor);
             }
-            catch(IllegalArgumentException ex)
+            catch (IllegalArgumentException ex)
             {
                 log.error("Unable to register metric: " + name, ex);
             }
@@ -198,14 +206,14 @@ public interface MonitorRegistry
         }
 
         @Override
-        public  void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2)
+        public void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2)
         {
             registerNoThrow(name(prefix, name(m1.getClass())), m1);
             registerNoThrow(name(prefix, name(m2.getClass())), m2);
         }
 
         @Override
-        public  void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2, final Monitor<?> m3)
+        public void registerAll(final String prefix, final Monitor<?> m1, final Monitor<?> m2, final Monitor<?> m3)
         {
             registerNoThrow(name(prefix, name(m1.getClass())), m1);
             registerNoThrow(name(prefix, name(m2.getClass())), m2);
@@ -213,7 +221,11 @@ public interface MonitorRegistry
         }
 
         @Override
-        public void registerAll(final String prefix,final  Monitor<?> m1,final  Monitor<?> m2,final  Monitor<?> m3,final  Monitor<?>... m4)
+        public void registerAll(final String prefix,
+                                final Monitor<?> m1,
+                                final Monitor<?> m2,
+                                final Monitor<?> m3,
+                                final Monitor<?>... m4)
         {
             MetricSet metrics = new MetricSet()
             {
@@ -226,11 +238,11 @@ public interface MonitorRegistry
                     monitor.addAll(Arrays.asList(m1, m2, m3));
                     monitor.addAll(Arrays.asList(m4));
 
-                    monitor.forEach(m->monitors.put(name(m.getClass()), m));
+                    monitor.forEach(m -> monitors.put(name(m.getClass()), m));
 
                     return monitors;
                 }
-            } ;
+            };
 
             registerAll(prefix, metrics);
         }
@@ -238,32 +250,33 @@ public interface MonitorRegistry
         @Override
         public Gauge gauge(String name)
         {
-          return getOrAdd(name, MetricBuilder.GAUGES);
+            return getOrAdd(name, MetricBuilder.GAUGES);
         }
 
         @Override
         public Gauge gauge(String name, MetricSupplier<Gauge> supplier)
         {
-         return getOrAdd(name, new MetricBuilder<Gauge>() {
+            return getOrAdd(name, new MetricBuilder<Gauge>()
+            {
 
-             @Override
-             public Gauge newMetric()
-             {
-                 return supplier.newMetric();
-             }
+                @Override
+                public Gauge newMetric()
+                {
+                    return supplier.newMetric();
+                }
 
-             @Override
-             public boolean isInstance(Monitor monitor)
-             {
-                 return Gauge.class.isInstance(monitor);
-             }
-         });
+                @Override
+                public boolean isInstance(Monitor monitor)
+                {
+                    return Gauge.class.isInstance(monitor);
+                }
+            });
         }
 
         @Override
         public Apdex apdex(final String name)
         {
-            final ApdexOptions options  = ApdexOptions.of(1, TimeUnit.SECONDS);
+            final ApdexOptions options = ApdexOptions.of(1, TimeUnit.SECONDS);
             return apdex(name, options);
         }
 
@@ -295,7 +308,8 @@ public interface MonitorRegistry
         @Override
         public Counter counter(String name, MetricSupplier<Counter> supplier)
         {
-            return getOrAdd(name, new MetricBuilder<Counter>(){
+            return getOrAdd(name, new MetricBuilder<Counter>()
+            {
 
                 @Override
                 public Counter newMetric()
@@ -316,7 +330,7 @@ public interface MonitorRegistry
         {
             final Monitor<?> metric = metrics.get(name);
 
-            if(builder.isInstance(metric))
+            if (builder.isInstance(metric))
             {
                 return (T) metric;
             }
@@ -326,15 +340,15 @@ public interface MonitorRegistry
                 {
                     return register(name, builder.newMetric());
                 }
-                catch(final IllegalArgumentException e)
+                catch (final IllegalArgumentException e)
                 {
                     final Monitor<?> added = metrics.get(name);
-                    if(builder.isInstance(added))
+                    if (builder.isInstance(added))
                         return (T) added;
                 }
             }
 
-            throw new IllegalArgumentException(name +" is already registered for a different type");
+            throw new IllegalArgumentException(name + " is already registered for a different type");
         }
 
         @Override
@@ -343,14 +357,14 @@ public interface MonitorRegistry
             registerAll(null, metrics);
         }
 
-        private  void registerAll(final String prefix, final MetricSet set) throws IllegalArgumentException
+        private void registerAll(final String prefix, final MetricSet set) throws IllegalArgumentException
         {
-            for(Map.Entry<String, Monitor<?>> entry : set.getValue().entrySet())
+            for (Map.Entry<String, Monitor<?>> entry : set.getValue().entrySet())
             {
                 Monitor<?> metric = entry.getValue();
-                if(metric.getMonitorType() == MetricType.COMPOSITE)
+                if (metric.getMonitorType() == MetricType.COMPOSITE)
                 {
-                    registerAll(name(prefix, entry.getKey()), (MetricSet)entry.getValue());
+                    registerAll(name(prefix, entry.getKey()), (MetricSet) entry.getValue());
                 }
                 else
                 {
@@ -373,7 +387,7 @@ public interface MonitorRegistry
          * @param names the remaining elements of the name
          * @return {@code name} and {@code names} concatenated by periods
          */
-        public static String name(final String name,final String... names)
+        public static String name(final String name, final String... names)
         {
             final StringBuilder builder = new StringBuilder();
             append(builder, name);
@@ -414,7 +428,7 @@ public interface MonitorRegistry
         }
     }
 
-    interface MetricBuilder <T extends Monitor>
+    interface MetricBuilder<T extends Monitor>
     {
         MetricBuilder<Counter> COUTNERS = new MetricBuilder<Counter>()
         {
@@ -450,15 +464,17 @@ public interface MonitorRegistry
 
         /**
          * Create new metric
+         *
          * @return
          */
         T newMetric();
 
         /**
          * Check if the monitor
+         *
          * @param monitor
          * @return
          */
-        boolean isInstance(final Monitor<?>  monitor);
+        boolean isInstance(final Monitor<?> monitor);
     }
 }

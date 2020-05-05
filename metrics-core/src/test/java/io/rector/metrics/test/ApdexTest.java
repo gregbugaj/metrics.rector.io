@@ -3,6 +3,7 @@ package io.rector.metrics.test;
 import io.rector.metrics.*;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,17 +16,19 @@ public class ApdexTest
     void testContextUsage()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
-        try(final ApdexContext context = apdex.newContext())
+        try (final ApdexContext context = apdex.newContext())
         {
             clock.advance(TimeUnit.MILLISECONDS, 20);
         }
 
-        try(final ApdexContext context = apdex.newContext())
+        try (final ApdexContext context = apdex.newContext())
         {
             clock.advance(TimeUnit.MILLISECONDS, 20);
+            final Duration elapsed = context.elapsed();
+            System.out.println(elapsed);
         }
 
         final ApdexSnapshot snapshot = apdex.getSnapshot();
@@ -36,7 +39,6 @@ public class ApdexTest
         assertEquals(0, snapshot.getFrustratingSize());
     }
 
-
     @Test
     void testFunctionUsage()
     {
@@ -44,12 +46,12 @@ public class ApdexTest
         final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
-        apdex.track(()->
-        {
-            clock.advance(TimeUnit.MILLISECONDS, 20);
+        apdex.track(() ->
+                    {
+                        clock.advance(TimeUnit.MILLISECONDS, 20);
 
-            return 1;
-        });
+                        return 1;
+                    });
 
         final ApdexSnapshot snapshot = apdex.getSnapshot();
 
@@ -63,7 +65,7 @@ public class ApdexTest
     void testDirectUsage()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         apdex.track(20);
@@ -75,12 +77,11 @@ public class ApdexTest
         assertEquals(0, snapshot.getFrustratingSize());
     }
 
-
     @Test
     void testMetricCalculationForTolerating()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         apdex.track(120);
@@ -96,7 +97,7 @@ public class ApdexTest
     void testMetricCalculationForFrustrating()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         // 4 * current request size  + 10
@@ -113,16 +114,16 @@ public class ApdexTest
     void trackAfterExceptionFromAction()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         Throwable throwable = null;
         try
         {
-            apdex.track(()->
-            {
-                throw new IllegalStateException();
-            });
+            apdex.track(() ->
+                        {
+                            throw new IllegalStateException();
+                        });
         }
         catch (final Exception ex)
         {
@@ -143,13 +144,13 @@ public class ApdexTest
     void trackAfterExceptionFromContext()
     {
         final TestClock clock = new TestClock();
-        final ApdexOptions options = ApdexOptions.of( 100, TimeUnit.MILLISECONDS);
+        final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
         Throwable throwable;
         try
         {
-            try(final ApdexContext context = apdex.newContext())
+            try (final ApdexContext context = apdex.newContext())
             {
                 throw new IllegalStateException();
             }
@@ -176,7 +177,7 @@ public class ApdexTest
         final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
-        try(final ApdexContext context = apdex.newContext())
+        try (final ApdexContext context = apdex.newContext())
         {
             clock.advance(TimeUnit.MILLISECONDS, 50);
         }
@@ -207,7 +208,6 @@ public class ApdexTest
         assertNotNull(apdex);
         assertNotNull(apdex.getSnapshot());
     }
-
 
     @Test
     void apedAcquisitionFromRegistryWithScore()

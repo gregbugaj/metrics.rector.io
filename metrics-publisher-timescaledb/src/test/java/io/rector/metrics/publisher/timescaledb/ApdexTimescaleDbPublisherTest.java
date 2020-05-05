@@ -6,6 +6,7 @@ import io.rector.metrics.ApdexOptions;
 import io.rector.metrics.MonitorRegistry;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 public class ApdexTimescaleDbPublisherTest
@@ -38,18 +39,17 @@ public class ApdexTimescaleDbPublisherTest
 
         final Apdex apdex = registry.apdex("apdex.sample", ApdexOptions.of(100, TimeUnit.MILLISECONDS));
 
-        while(true)
+        int counter = 0;
+        while(counter++ < 100)
         {
-
             try(final ApdexContext context = apdex.newContext())
             {
                 final SecureRandom sr = new SecureRandom();
                 final int sleep = sr.nextInt(350);
-
+                final Duration elapsed = context.elapsed();
+                System.out.println("Elapsed : " + elapsed);
                 Thread.sleep(sleep);
             }
         }
-
-//        Thread.currentThread().join();
     }
 }

@@ -9,20 +9,16 @@ import java.util.function.Supplier;
 
 /**
  * Application Performance Index Monitor
- *
  * The Apdex score is between 0 and 1 is calculated using the following:
  * <pre>
  *     ( Satisfied requests + ( Tolerating requests / 2 ) ) ) / Total number of requests
  * </pre>
- *
  * Apdex provides three thresholds estimating end user satisfaction, satisfied, tolerating and frustrating.
- *
  * <ul>
  *     <li>Satisfied: Response time less than or equal to T seconds.</li>
  *     <li>Tolerating: Response time between T seconds and 4T seconds.</li>
  *     <li>Frustrating: Response time greater than 4 T seconds.</li>
  * </ul>
- *
  */
 public class Apdex implements Monitor<Double>
 {
@@ -32,15 +28,27 @@ public class Apdex implements Monitor<Double>
 
     private final ApdexOptions options;
 
-    private Clock clock;
+    private final Clock clock;
 
     private ApdexProvider provider;
 
+    /**
+     * Create new APDEX monitor using default Clock
+     *
+     * @param size
+     * @param options
+     */
     public Apdex(int size, final ApdexOptions options)
     {
         this(size, options, Clock.defaultClock());
     }
 
+    /**
+     * Create new APDED monitor
+     * @param size
+     * @param options
+     * @param clock
+     */
     public Apdex(int size, final ApdexOptions options, final Clock clock)
     {
         if (size < 0)
@@ -58,20 +66,21 @@ public class Apdex implements Monitor<Double>
     private Reservoir createReservoir(int size)
     {
         if (size == 0)
-            return  new UniformReservoir();
+            return new UniformReservoir();
         else
-            return  new SlidingWindowReservoir(size);
+            return new SlidingWindowReservoir(size);
     }
 
     /**
      * Track supplied action
+     *
      * @param action the action to track
-     * @param <T> the return type value
+     * @param <T>    the return type value
      * @return
      */
     public <T> T track(final Supplier<T> action)
     {
-        if(action == null)
+        if (action == null)
             return null;
 
         final long s = clock.getTick();
@@ -88,12 +97,13 @@ public class Apdex implements Monitor<Double>
 
     /**
      * Add new data point with given duration with time conversion applied from supplied {@link ApdexOptions}
+     *
      * @param duration the duration in TimeUnit from {@link ApdexOptions}
      */
     public void track(final long duration)
     {
-        if(duration < 0)
-            return ;
+        if (duration < 0)
+            return;
 
         final TimeUnit unit = options.getUnit();
         final long durationInNanos = unit.toNanos(duration);
@@ -103,17 +113,18 @@ public class Apdex implements Monitor<Double>
 
     private void _track(final long durationInNanon)
     {
-        if(durationInNanon < 0)
-            return ;
+        if (durationInNanon < 0)
+            return;
 
         provider.update(durationInNanon);
 
-        if(log.isDebugEnabled())
+        if (log.isDebugEnabled())
             log.debug("apdex track ::{} ms | {} s", durationInNanon, TimeUnit.NANOSECONDS.toMillis(durationInNanon));
     }
 
     /**
      * Add new data point with supplied duration
+     *
      * @param unit
      * @param duration
      */
@@ -124,6 +135,7 @@ public class Apdex implements Monitor<Double>
 
     /**
      * Obtain new {@link ApdexContext}
+     *
      * @return
      */
     public ApdexContext newContext()
@@ -133,6 +145,7 @@ public class Apdex implements Monitor<Double>
 
     /**
      * Get data snapshot {@link ApdexSnapshot}
+     *
      * @return
      */
     public ApdexSnapshot getSnapshot()
@@ -150,16 +163,17 @@ public class Apdex implements Monitor<Double>
 
     /**
      * Get the score for this Apdex
-     *  0 : Failing
-     *  1 : Satisfied
+     * 0 : Failing
+     * 1 : Satisfied
      * ( Satisfied requests + ( Tolerating requests / 2 ) ) ) / Total number of requests
+     *
      * @return score in 0..1 range
      */
     @Override
     public Double getValue()
     {
         final ApdexSnapshot snapshot = getSnapshot();
-        if(snapshot == null || snapshot.getSize() == 0)
+        if (snapshot == null || snapshot.getSize() == 0)
             return 0.0D;
 
         final int satisfied = snapshot.getSatisfiedSize();
