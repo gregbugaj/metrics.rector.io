@@ -16,36 +16,26 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * InfluxDB Publisher
- *
  * Sample usage :
  * <pre>
- *
  * </pre>
  */
-public class InfluxDbPublisher implements Publisher
+public class InfluxDbPublisher extends Publisher
 {
     private static final Logger log = LoggerFactory.getLogger(InfluxDbPublisher.class);
 
     private InfluxDB influxDB;
 
-    private  boolean resetOnReporting;
-
-    private  MonitorRegistry registry;
-
-    private long time;
-
-    private TimeUnit unit;
-
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    public InfluxDbPublisher(final MonitorRegistry registry, final InfluxDbOptions options, long time, TimeUnit unit, boolean resetOnReporting)
+    public InfluxDbPublisher(final MonitorRegistry registry,
+                             final InfluxDbOptions options,
+                             long time,
+                             TimeUnit unit,
+                             boolean resetOnReporting)
     {
-        this.registry = registry;
-        this.time = time;
-        this.unit = unit;
-        this.resetOnReporting = resetOnReporting;
+        super(registry, time, unit, resetOnReporting);
         this.influxDB = create(options);
-
         verifyConnection();
     }
 
@@ -55,14 +45,12 @@ public class InfluxDbPublisher implements Publisher
         final String userName = options.getUserName();
         final String password = options.getPassword();
 
-        final InfluxDB influxDB = InfluxDBFactory.connect(databaseURL, userName, password);
-
-        return influxDB;
+        return InfluxDBFactory.connect(databaseURL, userName, password);
     }
 
     private void verifyConnection()
     {
-        Pong response = this.influxDB.ping();
+        final Pong response = this.influxDB.ping();
         if (response.getVersion().equalsIgnoreCase("unknown"))
         {
             log.error("Error pinging server.");
@@ -71,41 +59,29 @@ public class InfluxDbPublisher implements Publisher
     }
 
     @Override
-    public void start()
-    {
-
-    }
-
-    private synchronized void publisher()
+    protected void publish()
     {
         final Map<String, Monitor<?>> metrics = registry.getMetrics();
         // "logdate", "eventtime", "application", "probe", "probetype", "value", "source", "metrictype"
         final String logDate = "" + System.currentTimeMillis();
-        metrics.forEach((name, metric)->
-        {
-            try
-            {
-                final Message msg = Publisher.asMessage(name, metric);
-                final String time = "" + msg.getTime();
-                final String appId = msg.getAppId();
-                final Message.ValueObject value = msg.getValue();
-                final String source = msg.getSource();
-                final MetricType type = msg.getMonitorType();
-
-                if(resetOnReporting)
+        forEach((name, metric) ->
                 {
-                    if(metric instanceof Resettable)
+                    try
                     {
-                        ((Resettable)metric).reset();
-                    }
-                }
-            }
-            catch (final Exception ex)
-            {
-                log.error("Unable to store metric : " + name, ex);
-            }
-        });
+                        final Message msg = asMessage(name, metric);
+                        final String time = "" + msg.getTime();
+                        final String appId = msg.getAppId();
+                        final Message.ValueObject value = msg.getValue();
+                        final String source = msg.getSource();
+                        final MetricType type = msg.getMonitorType();
 
+                        //                        addPoint
+                    }
+                    catch (final Exception ex)
+                    {
+                        log.error("Unable to store metric : " + name, ex);
+                    }
+                });
     }
 
     /**
@@ -117,12 +93,15 @@ public class InfluxDbPublisher implements Publisher
      * @param tags
      * @return
      */
-    public CompletableFuture<Object> addPoint(final String metric, final long timestamp, final long value, final Map<String, String> tags)
+    public CompletableFuture<Object> addPoint(final String metric,
+                                              final long timestamp,
+                                              final long value,
+                                              final Map<String, String> tags)
     {
         return null;
     }
 
-    public static class Builder
+    public static class Builder extends CorePublisherBuilder<Builder>
     {
         private final MonitorRegistry registry;
 
@@ -140,19 +119,6 @@ public class InfluxDbPublisher implements Publisher
             this.options = Objects.requireNonNull(options);
         }
 
-        public Builder withInterval(long time, TimeUnit unit)
-        {
-            this.time = time;
-            this.unit = unit;
-            return this;
-        }
-
-        public Builder withResetOnReporting(boolean reset)
-        {
-            this.resetOnReporting = reset;
-            return this;
-        }
-
         public InfluxDbPublisher build()
         {
             return new InfluxDbPublisher(registry, options, time, unit, resetOnReporting);
@@ -167,7 +133,7 @@ public class InfluxDbPublisher implements Publisher
 
         private String databaseURL;
 
-        private String userName ;
+        private String userName;
 
         private String password;
 
@@ -216,7 +182,8 @@ public class InfluxDbPublisher implements Publisher
             this.password = password;
         }
 
-        public String getDatabaseURL() {
+        public String getDatabaseURL()
+        {
             return databaseURL;
         }
     }

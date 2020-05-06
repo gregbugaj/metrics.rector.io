@@ -13,8 +13,6 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,21 +21,11 @@ import java.util.concurrent.TimeUnit;
  * <pre>
  * </pre>
  */
-public class TimescaleDbPublisher implements Publisher
+public class TimescaleDbPublisher extends Publisher
 {
     private static final Logger log = LoggerFactory.getLogger(TimescaleDbPublisher.class);
 
     private final DataSource datasource;
-
-    private boolean resetOnReporting;
-
-    private MonitorRegistry registry;
-
-    private long time;
-
-    private TimeUnit unit;
-
-    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     public TimescaleDbPublisher(final MonitorRegistry registry,
                                 final DataSource datasource,
@@ -45,10 +33,7 @@ public class TimescaleDbPublisher implements Publisher
                                 TimeUnit unit,
                                 boolean resetOnReporting)
     {
-        this.registry = registry;
-        this.time = time;
-        this.unit = unit;
-        this.resetOnReporting = resetOnReporting;
+        super(registry, time, unit, resetOnReporting);
         this.datasource = datasource;
         verifyConnection();
     }
@@ -59,68 +44,12 @@ public class TimescaleDbPublisher implements Publisher
     }
 
     @Override
-    public void start()
-    {
-        executor.scheduleAtFixedRate(this::publisher, time, time, unit);
-    }
-
-    private void publisher()
+    protected void publish()
     {
         final String appName = registry.getName();
-        final Map<String, Monitor<?>> metrics = registry.getMetrics();
         final List<String> batch = new ArrayList<>();
 
-        metrics.forEach((name, metric) ->
-                        {
-                            try
-                            {
-                                final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-                                final Message msg = Publisher.asMessage(name, metric);
-                                final String time = dateFormat.format(new Date(msg.getTime()));
-                                final String appId = appName;// msg.getAppId();
-                                final String probe = msg.getName();
-
-                                final Message.ValueObject value = msg.getValue();
-                                final String valueAsString = value.getValueAsString();
-                                final Number valueAsNumber = value.getValueAsNumber();
-
-                                final String source = msg.getSource();
-                                final MetricType type = msg.getMonitorType();
-                                final Map<String, Object> attributes = msg.getAttributes();
-
-                                final String format =
-                                        "INSERT INTO tracked_events(time, event, application, UUID,  probe, probe_type, value_str, value_num, source_address, metric_type, data) \n"
-                                                +
-                                                "VALUES (NOW(), '%1$s', '%2$s', '%3$s', '%4$s', '%5$s', '%6$s', %7$s, '%8$s', '%9$s', '%10$s')";
-
-                                String query = String.format(format,
-                                                             time,
-                                                             appId,
-                                                             UUID.randomUUID(),
-                                                             probe,
-                                                             probe,
-                                                             valueAsString == null ? "" : valueAsString,
-                                                             valueAsNumber,
-                                                             source == null ? "" : source,
-                                                             type.name(),
-                                                             "{}"
-                                );
-
-                                batch.add(query);
-
-                                if (resetOnReporting)
-                                {
-                                    if (metric instanceof Resettable)
-                                    {
-                                        ((Resettable) metric).reset();
-                                    }
-                                }
-                            }
-                            catch (final Exception ex)
-                            {
-                                log.error("Unable to create metric : " + name, ex);
-                            }
-                        });
+        forEach((name, metric) -> apply(appName, name, metric, batch));
 
         try (final Connection connection = datasource.getConnection();
                 final Statement statement = connection.createStatement())
@@ -129,14 +58,59 @@ public class TimescaleDbPublisher implements Publisher
             {
                 statement.addBatch(query);
             }
-
             final int[] ids = statement.executeBatch();
             log.info("Total records inserted : {}", ids.length);
         }
-        catch (SQLException e)
+        catch (final SQLException e)
         {
-            e.printStackTrace();
             log.warn("Error running update statement", e);
+        }
+    }
+
+    private void apply(final String appName,
+                       final String name,
+                       final Monitor<?> metric,
+                       final List<String> batch)
+    {
+        try
+        {
+            final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+            final Message msg = asMessage(name, metric);
+            final String time = dateFormat.format(new Date(msg.getTime()));
+            final String appId = appName;// msg.getAppId();
+            final String probe = msg.getName();
+
+            final Message.ValueObject value = msg.getValue();
+            final String valueAsString = value.getValueAsString();
+            final Number valueAsNumber = value.getValueAsNumber();
+
+            final String source = msg.getSource();
+            final MetricType type = msg.getMonitorType();
+            final Map<String, Object> attributes = msg.getAttributes();
+
+            final String format =
+                    "INSERT INTO tracked_events(time, event, application, UUID,  probe, probe_type, value_str, value_num, source_address, metric_type, data) \n"
+                            +
+                            "VALUES (NOW(), '%1$s', '%2$s', '%3$s', '%4$s', '%5$s', '%6$s', %7$s, '%8$s', '%9$s', '%10$s')";
+
+            String query = String.format(format,
+                                         time,
+                                         appId,
+                                         UUID.randomUUID(),
+                                         probe,
+                                         probe,
+                                         valueAsString == null ? "" : valueAsString,
+                                         valueAsNumber,
+                                         source == null ? "" : source,
+                                         type.name(),
+                                         "{}"
+            );
+
+            batch.add(query);
+        }
+        catch (final Exception ex)
+        {
+            log.error("Unable to create metric : " + name, ex);
         }
     }
 

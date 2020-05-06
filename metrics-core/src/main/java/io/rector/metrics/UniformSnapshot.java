@@ -10,12 +10,11 @@ import static java.lang.Math.floor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * @author codahale
- * A statistical snapshot of a {@link UniformSnapshot}.
- */
+* @author codahale
+* A statistical snapshot of a {@link UniformSnapshot}.
+*/
 public class UniformSnapshot extends Snapshot
 {
-
     private final long[] values;
 
     /**
@@ -25,10 +24,10 @@ public class UniformSnapshot extends Snapshot
      */
     public UniformSnapshot(Collection<Long> values)
     {
-        final Object[] copy = values.toArray();
+        final Long[] copy = values.toArray(new Long[0]);
         this.values = new long[copy.length];
         for (int i = 0; i < copy.length; i++)
-            this.values[i] = (Long) copy[i];
+            this.values[i] = copy[i];
 
         Arrays.sort(this.values);
     }
@@ -87,8 +86,7 @@ public class UniformSnapshot extends Snapshot
      * @return the number of values
      */
     @Override
-    public int size()
-    {
+    public int size() {
         return values.length;
     }
 
@@ -98,8 +96,7 @@ public class UniformSnapshot extends Snapshot
      * @return the entire set of values
      */
     @Override
-    public long[] getValues()
-    {
+    public long[] getValues() {
         return Arrays.copyOf(values, values.length);
     }
 
@@ -109,10 +106,8 @@ public class UniformSnapshot extends Snapshot
      * @return the highest value
      */
     @Override
-    public long getMax()
-    {
-        if (values.length == 0)
-        {
+    public long getMax() {
+        if (values.length == 0) {
             return 0;
         }
         return values[values.length - 1];
@@ -182,13 +177,13 @@ public class UniformSnapshot extends Snapshot
         return Math.sqrt(variance);
     }
 
-    @Override
-    public double getMad()
-    {
-        return 0;
-    }
+        @Override
+        public double getMad()
+        {
+            return 0;
+        }
 
-    /**
+        /**
      * Writes the values of the snapshot to the given stream.
      *
      * @param output an output stream

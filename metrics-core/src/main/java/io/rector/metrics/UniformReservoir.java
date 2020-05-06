@@ -1,8 +1,6 @@
 package io.rector.metrics;
 
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -38,10 +36,7 @@ public class UniformReservoir implements Reservoir
     public UniformReservoir(final int size)
     {
         this.values = new long[size];
-        for (int i = 0; i < values.length; i++) {
-            values[i] = 0;
-        }
-
+        Arrays.fill(values, 0);
         count = 0;
     }
 
@@ -49,11 +44,9 @@ public class UniformReservoir implements Reservoir
     public int size()
     {
         final long c = count;
-        if (c > values.length)
-        {
+        if (c > values.length){
             return values.length;
         }
-
         return (int) c;
     }
 
@@ -91,12 +84,6 @@ public class UniformReservoir implements Reservoir
     @Override
     public Snapshot getSnapshot()
     {
-        final int s = size();
-        final List<Long> copy = new ArrayList<>(s);
-        for (int i = 0; i < s; i++) {
-            copy.add(values[i]);
-        }
-
-        return new UniformSnapshot(copy);
+        return new UniformSnapshot(values);
     }
 }

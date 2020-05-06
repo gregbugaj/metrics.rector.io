@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,17 +47,23 @@ public class ApdexTest
         final ApdexOptions options = ApdexOptions.of(100, TimeUnit.MILLISECONDS);
         final Apdex apdex = new Apdex(5, options, clock);
 
-        apdex.track(() ->
+        // Function
+        apdex.track((ctx) ->
                     {
-                        clock.advance(TimeUnit.MILLISECONDS, 20);
-
+                        clock.advance(TimeUnit.MILLISECONDS, 10);
                         return 1;
+                    });
+
+        // Consumer
+        apdex.track((ctx) ->
+                    {
+                        clock.advance(TimeUnit.MILLISECONDS, 10);
                     });
 
         final ApdexSnapshot snapshot = apdex.getSnapshot();
 
-        assertEquals(1, snapshot.getSize());
-        assertEquals(1, snapshot.getSatisfiedSize());
+        assertEquals(2, snapshot.getSize());
+        assertEquals(2, snapshot.getSatisfiedSize());
         assertEquals(0, snapshot.getToleratingSize());
         assertEquals(0, snapshot.getFrustratingSize());
     }
@@ -120,10 +127,9 @@ public class ApdexTest
         Throwable throwable = null;
         try
         {
-            apdex.track(() ->
-                        {
-                            throw new IllegalStateException();
-                        });
+            apdex.track((Consumer<ApdexContext>) (ctx) -> {
+                throw new IllegalStateException();
+            });
         }
         catch (final Exception ex)
         {

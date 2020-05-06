@@ -16,10 +16,12 @@ public class Timer implements Monitor<Long>
     public static class Context implements AutoCloseable
     {
         private final Timer timer;
+
         private final Clock clock;
+
         private final long startTime;
 
-        private Context(final Timer timer,final Clock clock)
+        private Context(final Timer timer, final Clock clock)
         {
             this.timer = timer;
             this.clock = clock;
@@ -67,17 +69,16 @@ public class Timer implements Monitor<Long>
         return new Context(this, clock);
     }
 
-
     /**
      * Adds a recorded duration.
      *
      * @param duration the length of the duration
      * @param unit     the scale unit of {@code duration}
      */
-    public void update(long duration, TimeUnit unit) {
+    public void update(long duration, TimeUnit unit)
+    {
         update(unit.toNanos(duration));
     }
-
 
     private void update(long duration)
     {
@@ -87,7 +88,6 @@ public class Timer implements Monitor<Long>
             //meter.mark();
         }
     }
-
 
     @Override
     public Long getValue()

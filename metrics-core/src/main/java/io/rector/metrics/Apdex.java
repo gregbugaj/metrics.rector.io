@@ -5,13 +5,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Application Performance Index Monitor
  * The Apdex score is between 0 and 1 is calculated using the following:
  * <pre>
  *     ( Satisfied requests + ( Tolerating requests / 2 ) ) ) / Total number of requests
+ *     0 : Failing
+ *     1 : Satisfied
  * </pre>
  * Apdex provides three thresholds estimating end user satisfaction, satisfied, tolerating and frustrating.
  * <ul>
@@ -45,6 +48,7 @@ public class Apdex implements Monitor<Double>
 
     /**
      * Create new APDED monitor
+     *
      * @param size
      * @param options
      * @param clock
@@ -78,20 +82,25 @@ public class Apdex implements Monitor<Double>
      * @param <T>    the return type value
      * @return
      */
-    public <T> T track(final Supplier<T> action)
+    public <T> T track(final Function<ApdexContext, T> action)
     {
         if (action == null)
             return null;
 
-        final long s = clock.getTick();
-
-        try
+        try (final ApdexContext ctx = newContext())
         {
-            return action.get();
+            return action.apply(ctx);
         }
-        finally
+    }
+
+    public void track(final Consumer<ApdexContext> action)
+    {
+        if (action == null)
+            return;
+
+        try (final ApdexContext ctx = newContext())
         {
-            _track(clock.getTick() - s);
+            action.accept(ctx);
         }
     }
 

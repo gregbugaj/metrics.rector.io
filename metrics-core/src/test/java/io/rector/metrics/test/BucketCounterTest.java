@@ -1,11 +1,10 @@
 package io.rector.metrics.test;
 
-
 import io.rector.metrics.BucketCounter;
 import io.rector.metrics.Snapshot;
- import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BucketCounterTest
 {
@@ -42,7 +41,6 @@ public class BucketCounterTest
 
         assertEquals(125.0, sp.getMad(), .000001);
     }
-
 
     private void checkSameBucket(final BucketCounter bc)
     {

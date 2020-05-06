@@ -53,14 +53,4 @@ public class MonitorConfigTest
         Monitors.register(gauge1);*/
         Thread.sleep(5000);
     }
-
-    public static class CountingPublisher implements Publisher
-    {
-        private static final Logger logger = LoggerFactory.getLogger(CountingPublisher.class);
-
-        @Override public void start()
-        {
-
-        }
-    }
 }
