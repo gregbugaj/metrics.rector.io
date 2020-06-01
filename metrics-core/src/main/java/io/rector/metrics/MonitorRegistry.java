@@ -87,6 +87,16 @@ public interface MonitorRegistry
     Apdex apdex(final String name, final ApdexOptions options);
 
     /**
+     * Create or retrieve apdex monitor, {@link Apdex} will be create on first access
+     *
+     * @param name    the name of the apdex monitor
+     * @param size    the reservoir size, 0 = Uniform >0 = Sliding window
+     * @param options the apdex options
+     * @return new instance of Apdex or existing one if the apdex already exist with given name
+     */
+    Apdex apdex(final String name, int size, final ApdexOptions options);
+
+    /**
      * Create or retrieve counter, {@link Counter} will be created on first access
      *
      * @param name of the counter to create and register
@@ -276,19 +286,23 @@ public interface MonitorRegistry
         @Override
         public Apdex apdex(final String name)
         {
-            final ApdexOptions options = ApdexOptions.of(1, TimeUnit.SECONDS);
-            return apdex(name, options);
+            return apdex(name, ApdexOptions.of(1, TimeUnit.SECONDS));
         }
 
         @Override
         public Apdex apdex(final String name, final ApdexOptions options)
+        {
+            return apdex(name, 100, options);
+        }
+
+        @Override public Apdex apdex(final String name, final int size, final ApdexOptions options)
         {
             return getOrAdd(name, new MetricBuilder<Apdex>()
             {
                 @Override
                 public Apdex newMetric()
                 {
-                    return new Apdex(10, options);
+                    return new Apdex(size, options);
                 }
 
                 @Override

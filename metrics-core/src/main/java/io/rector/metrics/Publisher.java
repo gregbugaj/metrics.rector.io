@@ -57,7 +57,6 @@ public abstract class Publisher
 
     public void start()
     {
-        System.out.println("Publisher.start");
         executor.scheduleAtFixedRate(this::publishToSink, time, time, unit);
     }
 
@@ -86,8 +85,6 @@ public abstract class Publisher
      */
     private void publishToSink()
     {
-        System.out.println("Publisher.publishToSink");
-
         try
         {
             mutex.acquire();
